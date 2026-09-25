@@ -99,7 +99,7 @@ label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
 
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925100931';
+const APP_ID='20260925101902';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -139,7 +139,7 @@ const SHOP=[
 const ACCENTS={green:'#34d399',blue:'#60a5fa',violet:'#a78bfa',pink:'#f472b6',orange:'#fb923c',red:'#f87171'};
 
 const DEFAULT={v:3,startDate:today(),quitDate:null,plan:{startLimit:20,step:2,everyDays:7},
- manualLimit:{},log:{},cravings:[],penalties:[],slips:[],chat:[],
+ manualLimit:{},log:{},cravings:[],penalties:[],slips:[],chat:[],challenge:{},
  garden:{leaves:0,tree:'oak',decor:[],bg:'day',lastTick:null,bought:{oak:1,day:1}},
  settings:{pricePerStick:38,cur:'₸',activeHours:16,cooldownMode:'auto',cooldownMin:50,penaltyOn:true,
            theme:'dark',accent:'green',quietFrom:23,quietTo:8,sound:'none'}};
@@ -304,6 +304,7 @@ function render(){const el=document.getElementById('app');
  else if(tab==='plan')el.innerHTML=viewPlan();
  else if(tab==='pen')el.innerHTML=viewPen();
  else if(tab==='more')el.innerHTML=viewMore();
+ else if(tab==='challenge')el.innerHTML=viewChallenge();
  else if(tab==='settings')el.innerHTML=viewSettings();
  renderNav();if(tab==='today')startCd();else{clearInterval(cdTick);stopSound();}
  if(tab==='chat'){const c=document.getElementById('chatScroll');if(c)c.scrollTop=c.scrollHeight;}}
@@ -383,7 +384,8 @@ function viewStats(){let bars='';const arr=[];for(let i=6;i>=0;i--){const d=new 
   '<div class="card"><div class="muted" style="margin-bottom:4px">Достижения</div>'+
   badges.map(b=>'<div class="badge '+(b[3]?'':'off')+'"><span class="e">'+b[1]+'</span><span>'+b[2]+'</span></div>').join('')+'</div>'+
   '<div class="grid2"><button class="ghost" onclick="shareCard()">📸 Картинка прогресса</button>'+
-  '<button class="ghost" onclick="copyReport()">📋 Отчёт текстом</button></div>';}
+  '<button class="ghost" onclick="copyReport()">📋 Отчёт текстом</button></div>'+
+  '<button class="ghost wide" style="margin-top:10px" onclick="tab=\'challenge\';render()">🤝 Дружеский вызов</button>';}
 
 function viewSos(){const cs=state.cravings.slice(0,6);
  const sounds=[['none','🔇 Тишина'],['rain','🌧 Дождь'],['ocean','🌊 Океан'],['brown','🎚 Шум']];
@@ -441,7 +443,7 @@ function togglePen(id){const p=state.penalties.find(x=>x.id===id);if(p){if(!p.do
 function delPen(id){state.penalties=state.penalties.filter(x=>x.id!==id);save();render();}
 function addManual(i){const p=PENALTY_PRESETS[i];state.penalties.unshift({id:Date.now()+''+Math.floor(Math.random()*1000),ts:Date.now(),k:p.k,name:p.n,unit:p.u,amt:randAmt(p),done:false,why:'вручную'});haptic('medium');save();render();toast('Штраф добавлен 💪');}
 
-function viewMore(){const rows=[['plan','📉','План снижения'],['pen','⚖️','Штрафы'],['settings','⚙️','Настройки']];
+function viewMore(){const rows=[['plan','📉','План снижения'],['pen','⚖️','Штрафы'],['challenge','🤝','Дружеский вызов'],['settings','⚙️','Настройки']];
  return head('Ещё','')+ '<div class="card">'+rows.map(r=>'<div class="badge" onclick="tab=\''+r[0]+'\';render()"><span class="e">'+r[1]+'</span><span style="flex:1">'+r[2]+'</span><span class="muted">›</span></div>').join('')+
  '<div class="badge" onclick="shareCard()"><span class="e">📸</span><span style="flex:1">Картинка прогресса</span><span class="muted">›</span></div>'+
  '<div class="badge" onclick="exportData()"><span class="e">⬇️</span><span style="flex:1">Экспорт данных</span><span class="muted">›</span></div>'+
@@ -482,6 +484,38 @@ function saveSettings(){const g=id=>document.getElementById(id).value;
  state.settings.penaltyOn=!!document.getElementById('pon').checked;
  state.settings.quietFrom=((+g('qf')||23)+24)%24;state.settings.quietTo=((+g('qt')||8)+24)%24;
  state.manualLimit={};save();haptic('medium');toast('Сохранено ✓');tab='today';render();}
+
+/* ---------- дружеский вызов ---------- */
+function mySnap(){const u=(TG&&TG.initDataUnsafe&&TG.initDataUnsafe.user)||{};
+ return{name:u.first_name||'Я',free:daysFree(),streak:streakUnder(),total:total(),avoided:avoided(),saved:Math.round(savedMoney()),leaves:state.garden.leaves};}
+async function chApi(action,code){const body={initData:(TG&&TG.initData)||'',action:action,code:code||'',snapshot:mySnap()};
+ const r=await fetch(API_BASE+'/challenge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return await r.json();}
+async function chCreate(){if(!API_BASE)return toast('Нет связи с сервером');try{const j=await chApi('create');
+ if(j.ok){state.challenge={code:j.code,members:j.members};save();render();toast('Вызов создан: '+j.code);}else toast('Ошибка');}catch(e){toast('Нет связи');}}
+async function chJoin(){const el=document.getElementById('chCode');const c=((el&&el.value)||'').trim().toUpperCase();if(!c)return;
+ try{const j=await chApi('join',c);if(j.ok){state.challenge={code:j.code,members:j.members};save();render();toast('Ты в вызове 🤝');}
+ else{state.challenge=Object.assign({},state.challenge||{},{msg:'Код не найден'});render();toast('Код не найден');}}catch(e){toast('Нет связи');}}
+async function chSync(){const ch=state.challenge||{};if(!ch.code)return;
+ try{const j=await chApi('sync',ch.code);if(j.ok){state.challenge={code:j.code,members:j.members};save();render();toast('Обновлено');}}catch(e){toast('Нет связи');}}
+function chLeave(){state.challenge={};save();render();toast('Вышел из вызова');}
+function chInvite(){const c=(state.challenge||{}).code||'';const txt='Брось курить со мной 💪 Открой приложение @protiv_cureniya_bot → меню «⋯» → «Дружеский вызов» → введи код: '+c;
+ navigator.clipboard?navigator.clipboard.writeText(txt).then(()=>toast('Приглашение скопировано 📋'),()=>toast('Не вышло')):toast('Не вышло');}
+function viewChallenge(){const ch=state.challenge||{};
+ if(!ch.code){return head('Вызов','Брось курить на спор с другом')+
+  '<div class="card"><div class="muted">Создай вызов и отправь код другу — кто дольше продержится и больше сэкономит.</div>'+
+  '<button class="wide" style="margin-top:12px" onclick="chCreate()">🤝 Создать вызов</button></div>'+
+  '<div class="card"><label>Или войди по коду друга</label><div class="row"><input id="chCode" placeholder="КОД" style="text-transform:uppercase"><button onclick="chJoin()">Войти</button></div></div>'+
+  (ch.msg?'<div class="note">'+ch.msg+'</div>':'');}
+ const ms=(ch.members||[]);
+ const rows=ms.length?ms.map((m,i)=>{const s=m.snap||{};
+  return '<div class="badge"><span class="e">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'•')+'</span><span style="flex:1">'+(m.name||'Друг')+(m.me?' (ты)':'')+
+   '<div class="muted" style="font-size:11.5px">ряд: '+(s.streak||0)+' · без никотина: '+(s.free||0)+' · не выкурено: '+(s.avoided||0)+'</div></span>'+
+   '<b>'+(s.saved||0)+' '+state.settings.cur+'</b></div>';}).join(''):'<div class="muted">Пока никого. Отправь код другу.</div>';
+ return head('Вызов '+ch.code,'Кто дольше продержится')+
+  '<div class="card"><div class="muted" style="margin-bottom:4px">Таблица</div>'+rows+'</div>'+
+  '<div class="grid2"><button class="ghost" onclick="chSync()">🔄 Обновить</button><button class="ghost" onclick="chInvite()">📋 Пригласить</button></div>'+
+  '<button class="ghost wide" style="margin-top:10px" onclick="chLeave()">Выйти из вызова</button>'+
+  '<div class="note">Код: <b>'+ch.code+'</b>. Друг: @protiv_cureniya_bot → «⋯» → «Дружеский вызов» → код.</div>';}
 
 function openWish(){const s=Math.round(savedMoney()),cur=state.settings.cur;
  const rows=WISH.slice().sort((a,b)=>a.p-b.p).map(it=>{const ok=s>=it.p,left=it.p-s,pct=Math.min(100,Math.round(s/it.p*100));
