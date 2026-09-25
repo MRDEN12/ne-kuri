@@ -128,6 +128,7 @@ label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
 <div class="nav" id="nav"></div>
 <div class="toast" id="toast"></div>
 <div class="modal" id="modal"></div>
+<audio id="bgm" loop preload="auto"></audio>
 
 <script>
 window.__err=function(m){try{var d=document.getElementById('app');if(d)d.innerHTML='<div class="card">⚠️ Ошибка: '+m+'</div>'+d.innerHTML;}catch(e){}};
@@ -136,7 +137,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925214444';
+const APP_ID='20260925214629';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -240,10 +241,12 @@ function applyTheme(){document.body.dataset.theme=state.settings.theme||'dark';
 
 /* ---------- звуки (реальные записи, Mixkit free license) ---------- */
 const SOUNDS=[['none','🔇 Тишина'],['rain','🌧 Дождь'],['ocean','🌊 Океан'],['forest','🌲 Лес'],['night','🌙 Ночь'],['wind','💨 Ветер'],['fire','🔥 Костёр']];
-let SND=null;
-function stopSound(){if(SND){try{SND.pause();SND.currentTime=0;}catch(e){}SND=null;}}
-function playSound(t){stopSound();if(!t||t==='none')return;
- try{const a=new Audio('assets/sounds/'+t+'.mp3');a.loop=true;a.volume=0.6;a.play().catch(()=>{});SND=a;}catch(e){}}
+let SNDNAME=null;
+function stopSound(){const a=document.getElementById('bgm');if(a){try{a.pause();a.currentTime=0;}catch(e){}}SNDNAME=null;}
+function playSound(t){const a=document.getElementById('bgm');if(!a)return;
+ if(!t||t==='none'){stopSound();return;}
+ try{if(SNDNAME!==t){a.src='assets/sounds/'+t+'.mp3';SNDNAME=t;}a.loop=true;a.volume=0.6;
+  const p=a.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
 
 /* ---------- действия ---------- */
 function addStick(n){const d=today();state.log[d]=state.log[d]||[];
@@ -334,10 +337,11 @@ function render(){const el=document.getElementById('app');
  else if(tab==='challenge')el.innerHTML=viewChallenge();
  else if(tab==='wish')el.innerHTML=viewWish();
  else if(tab==='settings')el.innerHTML=viewSettings();
- renderNav();if(tab==='today')startCd();else{clearInterval(cdTick);stopSound();}
+ renderNav();if(tab==='today')startCd();else clearInterval(cdTick);
  if(tab==='chat'){const c=document.getElementById('chatScroll');if(c)c.scrollTop=c.scrollHeight;}}
+function nav(k){if(tab==='sos'&&k!=='sos')stopSound();tab=k;haptic();render();}
 function renderNav(){const it=[['today','📆','Сегодня'],['garden','🌳','Сад'],['chat','💬','Оскар'],['stats','📊','Стата'],['sos','🆘','SOS']];
- document.getElementById('nav').innerHTML=it.map(([k,i,t])=>'<a href="#" class="'+(tab===k?'on':'')+'" onclick="tab=\''+k+'\';haptic();render();return false"><span class="i">'+i+'</span>'+t+'</a>').join('');}
+ document.getElementById('nav').innerHTML=it.map(([k,i,t])=>'<a href="#" class="'+(tab===k?'on':'')+'" onclick="nav(\''+k+'\');return false"><span class="i">'+i+'</span>'+t+'</a>').join('');}
 function pgHead(t,s){return '<div class="row between" style="margin:4px 2px 14px"><div><h1>'+t+'</h1><div class="sub">'+s+'</div></div>'+
  '<button class="ghost sm" onclick="tab=\'more\';render()">☰</button></div>';}
 
@@ -431,7 +435,8 @@ function viewSos(){const cs=state.cravings.slice(0,6);
   '<div class="row center" style="margin:10px 0"><div class="timer" id="sosT">05:00</div></div>'+
   '<div class="muted">Звук для медитации</div><div class="chips" id="sndRow">'+
   sounds.map(s=>'<span class="chip '+(state.settings.sound===s[0]?'on':'')+'" onclick="setSound(\''+s[0]+'\')">'+s[1]+'</span>').join('')+'</div>'+
-  '<div class="grid2" style="margin-top:12px"><button onclick="startSos(300)">▶️ 5 минут</button><button class="ghost" onclick="startSos(120)">⚡ 2 минуты</button></div></div>'+
+  '<div class="grid2" style="margin-top:12px"><button onclick="startSos(300)">▶️ 5 минут</button><button class="ghost" onclick="startSos(120)">⚡ 2 минуты</button></div>'+
+  '<button class="ghost wide" style="margin-top:8px" onclick="stopSound();toast(\'Звук выключен\')">⏹ Стоп звук</button></div>'+
   '<div class="card"><div class="muted" style="margin-bottom:6px">Что сделать прямо сейчас</div>'+
   '<div class="badge"><span class="e">💧</span><span>Выпей воды мелкими глотками</span></div>'+
   '<div class="badge"><span class="e">🌬</span><span>Дыхание 4-7-8: вдох 4с, задержка 7с, выдох 8с — 5 раз</span></div>'+
