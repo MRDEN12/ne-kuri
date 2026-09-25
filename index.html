@@ -103,6 +103,9 @@ label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
 @keyframes fl{0%{left:-8%;bottom:28%}50%{bottom:38%}100%{left:106%;bottom:30%}}
 .firefly{position:absolute;z-index:1;font-size:9px;animation:ff 4s ease-in-out infinite}
 @keyframes ff{0%,100%{opacity:0;transform:translateY(0)}50%{opacity:1;transform:translateY(-14px)}}
+.decor img{width:46px;height:auto;display:block}
+.fly img{width:38px;height:auto}
+.tree{max-width:76%;height:auto}
 /* фоны (заменяют градиент, если файл есть) */
 .scene{background-size:cover;background-position:center}
 .scene[data-bg="day"]{background-image:url('assets/bg_day.jpg')}
@@ -132,7 +135,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925115826';
+const APP_ID='20260925121845';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -161,12 +164,10 @@ const WISH=[
  {e:'🏋️',n:'Месяц спортзала',p:20000},{e:'🔩',n:'Катушка PA6-CF',p:25000},{e:'🎧',n:'Хорошие наушники',p:60000},
  {e:'📱',n:'Новый смартфон',p:250000},{e:'🖨️',n:'Ещё один P1S',p:450000},{e:'💻',n:'Игровой ноутбук',p:900000}];
 const SHOP=[
- {id:'oak',cat:'tree',e:'🌳',n:'Дуб',p:0},{id:'pine',cat:'tree',e:'🌲',n:'Сосна',p:30},
- {id:'palm',cat:'tree',e:'🌴',n:'Пальма',p:60},{id:'sakura',cat:'tree',e:'🌸',n:'Сакура',p:120},
- {id:'cactus',cat:'tree',e:'🌵',n:'Кактус-босс',p:200},
- {id:'bird',cat:'decor',e:'🐦',n:'Птичка',p:25},{id:'lantern',cat:'decor',e:'🏮',n:'Фонарик',p:35},
- {id:'turtle',cat:'decor',e:'🐢',n:'Черепаха',p:40},{id:'fountain',cat:'decor',e:'⛲',n:'Фонтан',p:50},
- {id:'kite',cat:'decor',e:'🪁',n:'Змей',p:45},{id:'rainbow',cat:'decor',e:'🌈',n:'Радуга',p:80},
+ {id:'bird',cat:'decor',e:'🐦',n:'Птичка',p:20},{id:'lantern',cat:'decor',e:'🏮',n:'Фонарик',p:35},
+ {id:'turtle',cat:'decor',e:'🐢',n:'Черепаха',p:40},{id:'kite',cat:'decor',e:'🪁',n:'Змей',p:45},
+ {id:'fountain',cat:'decor',e:'⛲',n:'Фонтан',p:55},{id:'fireflies',cat:'decor',e:'✨',n:'Банка светлячков',p:60},
+ {id:'rainbow',cat:'decor',e:'🌈',n:'Радуга',p:80},{id:'gnome',cat:'decor',e:'🧙',n:'Гномик',p:90},
  {id:'day',cat:'bg',e:'☀️',n:'День',p:0},{id:'sunset',cat:'bg',e:'🌇',n:'Закат',p:40},
  {id:'night',cat:'bg',e:'🌙',n:'Ночь',p:60},{id:'space',cat:'bg',e:'🌌',n:'Космос',p:100}];
 const ACCENTS={green:'#34d399',blue:'#60a5fa',violet:'#a78bfa',pink:'#f472b6',orange:'#fb923c',red:'#f87171'};
@@ -316,8 +317,8 @@ function shareCard(){
  toast('Картинка сохраняется 📸');}
 
 /* ---------- сад ---------- */
-function treeEmoji(){const it=SHOP.find(s=>s.id===state.garden.tree);return it?it.e:'🌳';}
-function treeSize(){const lv=Math.min(76,34+state.garden.leaves*0.35+streakUnder()*1.4);return Math.round(lv);}
+function treeStage(){return 1+Math.min(5,Math.floor((state.garden.leaves+streakUnder()*8)/60));}
+function treeW(){return Math.round(110+treeStage()*26);}
 function buy(id){const it=SHOP.find(s=>s.id===id);if(!it)return;if(state.garden.bought[id]){equip(id);return;}
  if(state.garden.leaves<it.p){toast('Не хватает листьев 🍃');return;}
  state.garden.leaves-=it.p;state.garden.bought[id]=1;haptic('medium');save();equip(id);toast('Куплено! '+it.e);}
@@ -374,15 +375,15 @@ function skyLayer(bg){if(bg==='day')return '<span class="sun">☀️</span><span
 function stars(n,sp){let o='';for(let i=0;i<n;i++){const L=(i*37)%92+3,T=(i*53)%58+3;o+='<span class="star" style="left:'+L+'%;top:'+T+'%;animation-delay:'+((i%7)*.4)+'s">'+(sp?'✦':'⭐')+'</span>';}return o;}
 function fireflies(n){let o='';for(let i=0;i<n;i++){const L=(i*23)%84+6,B=(i*17)%40+12;o+='<span class="firefly" style="left:'+L+'%;bottom:'+B+'%;animation-delay:'+((i%5)*.7)+'s">✨</span>';}return o;}
 function leafLayer(n){let o='';for(let i=0;i<n;i++){const L=(i*29)%86+4,dur=7+((i*3)%3)*2.5,dl=(i*2.1)%5;o+='<span class="leaf" style="left:'+L+'%;animation-duration:'+dur+'s;animation-delay:-'+dl+'s">'+(i%2?'🍃':'🍂')+'</span>';}return o;}
-function birdLayer(){return state.garden.bought['bird']?'<span class="fly">🐦</span>':'';}
+function birdLayer(){return state.garden.bought['bird']?'<span class="fly"><img src="assets/deco_bird.png" alt=""></span>':'';}
 function viewGarden(){const g=state.garden;
  const dec=g.decor.map((id,i)=>{const it=SHOP.find(s=>s.id===id);if(!it)return'';
-  const pos=[['12%','76%'],['84%','78%'],['16%','62%'],['80%','60%'],['30%','22%'],['68%','26%']][i%6];
-  return '<span class="decor" style="left:'+pos[0]+';top:'+pos[1]+'">'+it.e+'</span>';}).join('');
+  const pos=[['6%','74%'],['78%','76%'],['12%','56%'],['80%','54%'],['28%','16%'],['64%','18%']][i%6];
+  return '<span class="decor" style="left:'+pos[0]+';top:'+pos[1]+'"><img src="assets/deco_'+id+'.png" alt=""></span>';}).join('');
  const scene='<div class="scene" data-bg="'+g.bg+'">'+skyLayer(g.bg)+leafLayer(6)+birdLayer()+dec+
-  '<div class="tree" style="font-size:'+treeSize()+'px">'+treeEmoji()+'</div><div class="grass">🌿🌿🌿</div>'+
+  '<img class="tree" src="assets/tree_'+treeStage()+'.png" style="width:'+treeW()+'px" alt=""><div class="grass">🌿🌿🌿</div>'+
   '<div class="leaves" style="margin-top:6px;background:rgba(0,0,0,.25);color:#fff;padding:3px 10px;border-radius:20px">🍃 '+g.leaves+'</div></div>';
- const cats=[['tree','Деревья'],['decor','Украшения'],['bg','Фон']];
+ const cats=[['decor','Украшения'],['bg','Фон']];
  let shop='';
  cats.forEach(([c,name])=>{shop+='<div class="muted" style="margin:12px 0 2px">'+name+'</div>';
   SHOP.filter(s=>s.cat===c).forEach(s=>{const owned=!!g.bought[s.id];
@@ -393,7 +394,7 @@ function viewGarden(){const g=state.garden;
           :('<button class="sm" onclick="buy(\''+s.id+'\')">Купить</button>'))+'</div>';});});
  return pgHead('Сад','Листья капают за дни под лимитом')+
   '<div class="card">'+scene+'</div>'+
-  '<div class="note">🍃 <b>Как капают листья:</b> +5 за день под лимитом, ещё +5 за день без стиков, +2 за пережитую тягу, +2 за выполненный штраф. Трать на деревья, украшения и фоны — сад растёт вместе с тобой.</div>'+
+  '<div class="note">🍃 <b>Листья:</b> +5 за день под лимитом, ещё +5 за день без стиков, +2 за тягу, +2 за штраф. Дерево <b>растёт само</b> — от ростка до магического дуба (по листьям и серии). Листья трать на украшения и фоны.</div>'+
   '<div class="card">'+shop+'</div>';}
 
 function viewChat(){
