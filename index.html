@@ -103,6 +103,12 @@ label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
 @keyframes fl{0%{left:-8%;bottom:28%}50%{bottom:38%}100%{left:106%;bottom:30%}}
 .firefly{position:absolute;z-index:1;font-size:9px;animation:ff 4s ease-in-out infinite}
 @keyframes ff{0%,100%{opacity:0;transform:translateY(0)}50%{opacity:1;transform:translateY(-14px)}}
+/* фоны (заменяют градиент, если файл есть) */
+.scene{background-size:cover;background-position:center}
+.scene[data-bg="day"]{background-image:url('assets/bg_day.jpg')}
+.scene[data-bg="sunset"]{background-image:url('assets/bg_sunset.jpg')}
+.scene[data-bg="night"]{background-image:url('assets/bg_night.jpg')}
+.scene[data-bg="space"]{background-image:url('assets/bg_space.jpg')}
 /* чат */
 .chat{display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
 .bub{max-width:84%;padding:10px 13px;border-radius:16px;font-size:14.5px;line-height:1.35;white-space:pre-wrap;word-break:break-word}
@@ -126,7 +132,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925103349';
+const APP_ID='20260925115826';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
