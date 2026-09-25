@@ -94,6 +94,7 @@ if (TG){ try{ TG.ready(); TG.expand(); TG.setHeaderColor && TG.setHeaderColor('#
 const haptic=(t)=>{ try{ TG && TG.HapticFeedback && TG.HapticFeedback.impactOccurred(t||'light'); }catch(e){} };
 
 const APP_VER='v2 · 25.09.2026';
+const APP_ID='20260925074756';
 const DAY=86400000;
 const pad=n=>String(n).padStart(2,'0');
 const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -533,6 +534,20 @@ function startSos(sec){
 window.tab=tab;
 
 load(()=>{ render(); });
+
+/* само-обновление: если на сервере лежит version.json с другим id — перезагружаемся на новый URL */
+(function(){
+  try{
+    fetch('version.json?t='+Date.now(),{cache:'no-store'})
+      .then(r=>r.json()).then(d=>{
+        const id=d&&d.id; if(!id||id===APP_ID) return;
+        if(location.search.indexOf(id)>=0) return;
+        if(sessionStorage.getItem('nk_upd')===id) return;
+        sessionStorage.setItem('nk_upd',id);
+        location.replace(location.pathname+'?id='+encodeURIComponent(id)+location.hash);
+      }).catch(()=>{});
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
