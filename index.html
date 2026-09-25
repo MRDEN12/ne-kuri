@@ -94,7 +94,7 @@ if (TG){ try{ TG.ready(); TG.expand(); TG.setHeaderColor && TG.setHeaderColor('#
 const haptic=(t)=>{ try{ TG && TG.HapticFeedback && TG.HapticFeedback.impactOccurred(t||'light'); }catch(e){} };
 
 const APP_VER='v2 · 25.09.2026';
-const APP_ID='20260925074756';
+const APP_ID='20260925075234';
 const DAY=86400000;
 const pad=n=>String(n).padStart(2,'0');
 const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -239,6 +239,7 @@ function addStick(n){
   const L=currentLimit();
   const early = state.settings.penaltyOn && (left>0 || L===0);
   state.log[d].push(Date.now());
+  notifyServer();
   if(early){
     const p=makePenalty(left,L);
     state.penalties.unshift(p);
@@ -250,6 +251,12 @@ function addStick(n){
   if(s>L) toast('⚠️ Лимит превышен на '+(s-L));
   else if(s===L) toast('Всё, лимит на сегодня исчерпан 🚭');
   else toast('Записал 👍 следующий через '+cooldownMin()+' мин');
+}
+function notifyServer(){
+  if(!API_BASE) return;
+  const d=today(), L=currentLimit(), s=smokedOn(d);
+  const payload={ initData:(TG&&TG.initData)||'', cooldownMin:cooldownMin(), limit:L, left:Math.max(0,L-s), over:Math.max(0,s-L) };
+  try{ fetch(API_BASE+'/hit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{}); }catch(e){}
 }
 function randAmt(p){ if(!p.max) return 0; const n=Math.floor((p.max-p.min)/p.step)+1; return p.min+Math.floor(Math.random()*n)*p.step; }
 function makePenalty(leftMs,L){
@@ -534,6 +541,10 @@ function startSos(sec){
 window.tab=tab;
 
 load(()=>{ render(); });
+
+/* база API для уведомлений (берём из api.json — можно менять без пересборки) */
+let API_BASE='';
+(function(){ try{ fetch('api.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{ if(d&&d.base) API_BASE=String(d.base).replace(/\/$/,''); }).catch(()=>{}); }catch(e){} })();
 
 /* само-обновление: если на сервере лежит version.json с другим id — перезагружаемся на новый URL */
 (function(){
