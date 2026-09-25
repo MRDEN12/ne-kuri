@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Не курю — трекер</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0e1013; --card:#171a1f; --card2:#1e2228; --line:#272c33;
+  --txt:#e8ebef; --dim:#8b949e; --acc:#34d399; --acc2:#22c55e;
+  --warn:#fbbf24; --bad:#f87171; --blue:#60a5fa;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Segoe UI,sans-serif;font-size:16px}
+body{padding-bottom:78px;overscroll-behavior:none}
+.wrap{padding:14px 14px 0}
+h1{font-size:17px;margin:0;font-weight:600}
+.sub{color:var(--dim);font-size:12.5px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.big{font-size:44px;font-weight:700;line-height:1;letter-spacing:-1px}
+.big small{font-size:16px;color:var(--dim);font-weight:500;letter-spacing:0}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.center{justify-content:center}
+.muted{color:var(--dim);font-size:13px}
+.bar{height:10px;border-radius:6px;background:#23282f;overflow:hidden;margin-top:10px}
+.bar>i{display:block;height:100%;background:var(--acc);border-radius:6px;transition:width .35s}
+button{font-family:inherit;font-size:15px;border:none;border-radius:12px;padding:13px 16px;color:#08130d;
+  background:var(--acc);font-weight:600;cursor:pointer;transition:transform .06s}
+button:active{transform:scale(.97)}
+button.ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+button.warn{background:var(--warn);color:#231a00}
+button.bad{background:var(--bad);color:#2a0b0b}
+button.sm{padding:9px 12px;font-size:13.5px;border-radius:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px}
+.stat b{display:block;font-size:21px;margin-top:2px}
+.stat span{font-size:11.5px;color:var(--dim)}
+.step{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.step:last-child{border:none}
+.step .d{color:var(--dim)}
+.step.now{color:var(--acc);font-weight:600}
+.chart{display:flex;align-items:flex-end;gap:6px;height:110px;margin-top:6px}
+.chart .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
+.chart .col i{width:100%;border-radius:5px 5px 0 0;background:var(--acc);min-height:3px;transition:height .3s}
+.chart .col i.over{background:var(--bad)}
+.chart .col i.empty{background:#2b3138}
+.chart .col span{font-size:10px;color:var(--dim)}
+.badge{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.badge:last-child{border:none}
+.badge.off{opacity:.35}
+.badge .e{font-size:20px;width:26px;text-align:center}
+.nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(14,16,19,.94);
+  border-top:1px solid var(--line);backdrop-filter:blur(12px);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.nav a{flex:1;text-align:center;color:var(--dim);text-decoration:none;font-size:10.5px;padding:5px 0;border-radius:12px}
+.nav a.on{color:var(--acc)}
+.nav a .i{display:block;font-size:20px;line-height:1.25}
+input,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit}
+label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
+.pill{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;background:var(--card2);border:1px solid var(--line)}
+.hero{text-align:center;padding:22px 16px}
+.fire{font-size:30px}
+.timer{font-size:56px;font-weight:700;letter-spacing:-2px;font-variant-numeric:tabular-nums}
+.note{background:#14231b;border:1px solid #1f3a2b;border-radius:12px;padding:11px 12px;font-size:13.5px;color:#a7e0c1;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#e8ebef;color:#111;
+  padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="nav" id="nav"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+if (TG){ try{ TG.ready(); TG.expand(); TG.setHeaderColor && TG.setHeaderColor('#0e1013'); TG.enableClosingConfirmation && TG.enableClosingConfirmation(); }catch(e){} }
+const haptic=(t)=>{ try{ TG && TG.HapticFeedback && TG.HapticFeedback.impactOccurred(t||'light'); }catch(e){} };
+
+const DAY=86400000;
+const pad=n=>String(n).padStart(2,'0');
+const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>fmtD(new Date());
+const parseD=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
+const diffDays=(a,b)=>Math.round((parseD(b)-parseD(a))/DAY);
+const human=s=>{const a=s.split('-');return a[2]+'.'+a[1]+'.'+a[0];};
+
+const DEFAULT={
+  v:1,
+  startDate: today(),
+  quitDate: null,
+  plan:{startLimit:20, step:2, everyDays:7},
+  manualLimit:{},
+  log:{},
+  cravings:[],
+  settings:{pricePerStick:38, cur:'₸', oldDaily:90}
+};
+let state=JSON.parse(JSON.stringify(DEFAULT));
+let tab='today';
+let sosTimer=null;
+
+/* ---------- storage ---------- */
+function merge(o){ // shallow-merge into defaults
+  state=Object.assign({},JSON.parse(JSON.stringify(DEFAULT)),o||{});
+  state.plan=Object.assign({},DEFAULT.plan,(o&&o.plan)||{});
+  state.settings=Object.assign({},DEFAULT.settings,(o&&o.settings)||{});
+}
+function save(){
+  const s=JSON.stringify(state);
+  if(TG&&TG.CloudStorage){ TG.CloudStorage.setItem('nk_state',s,()=>{}); }
+  try{ localStorage.setItem('nk_state',s); }catch(e){}
+}
+function load(cb){
+  if(TG&&TG.CloudStorage){
+    TG.CloudStorage.getItem('nk_state',(err,val)=>{
+      if(val){ try{ merge(JSON.parse(val)); }catch(e){} }
+      else { try{ const l=localStorage.getItem('nk_state'); if(l) merge(JSON.parse(l)); }catch(e){} }
+      cb&&cb();
+    });
+  } else {
+    try{ const l=localStorage.getItem('nk_state'); if(l) merge(JSON.parse(l)); }catch(e){}
+    cb&&cb();
+  }
+}
+
+/* ---------- domain ---------- */
+function limitFor(dateStr){
+  if(state.manualLimit[dateStr]!=null) return state.manualLimit[dateStr];
+  const di=diffDays(state.startDate,dateStr);
+  if(di<0) return state.plan.startLimit;
+  if(state.quitDate){ const qi=diffDays(state.startDate,state.quitDate); if(di>=qi) return 0; }
+  const dec=Math.floor(di/state.plan.everyDays)*state.plan.step;
+  return Math.max(0,state.plan.startLimit-dec);
+}
+const smokedOn=d=>(state.log[d]||[]).length;
+const lastTs=d=>{const a=state.log[d]||[];return a.length?a[a.length-1]:null;};
+function currentLimit(){ return limitFor(today()); }
+function nextStep(){ // {date, limit} when limit drops next
+  const todayL=currentLimit();
+  for(let i=1;i<=120;i++){
+    const d=new Date(); d.setDate(d.getDate()+i); const ds=fmtD(d);
+    const l=limitFor(ds);
+    if(l<todayL) return {date:ds,limit:l};
+    if(state.quitDate && l===0) return {date:ds,limit:0};
+  }
+  return null;
+}
+function zeroDate(){
+  for(let i=0;i<=400;i++){
+    const d=new Date(); d.setDate(d.getDate()+i); const ds=fmtD(d);
+    if(limitFor(ds)===0) return ds;
+  }
+  return null;
+}
+function streakUnderLimit(){
+  // consecutive days (ending today) with data and smoked<=limit
+  let n=0; const d=new Date();
+  for(let i=0;i<400;i++){
+    const ds=fmtD(d); const s=smokedOn(ds); const L=limitFor(ds);
+    if(s===0 && i>0){ d.setDate(d.getDate()-1); continue; } // skip days w/o data (except today)
+    if(s<=L) n++; else break;
+    d.setDate(d.getDate()-1);
+  }
+  return n;
+}
+function daysFree(){
+  if(!state.quitDate) return 0;
+  const q=parseD(state.quitDate); const t=new Date(); q.setHours(0,0,0,0); t.setHours(0,0,0,0);
+  let n=Math.floor((t-q)/DAY);
+  if(n<0) return 0;
+  // only count if actually 0 since quit
+  for(let i=0;i<=n;i++){ const d=new Date(q); d.setDate(d.getDate()+i); if(smokedOn(fmtD(d))>0) return 0; }
+  return n;
+}
+function total(){ let t=0; for(const k in state.log) t+=state.log[k].length; return t; }
+function avg7(){ let s=0; for(let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); s+=smokedOn(fmtD(d)); } return s/7; }
+function spent7(){ let s=0; for(let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); s+=smokedOn(fmtD(d)); } return s*state.settings.pricePerStick; }
+function savedTotal(){
+  const di=Math.max(0,diffDays(state.startDate,today()));
+  let planSum=0;
+  for(let i=0;i<=di;i++){ const d=new Date(state.startDate+'T00:00:00'); d.setDate(d.getDate()+i); planSum+=limitFor(fmtD(d)); }
+  return Math.max(0,(planSum-total()))*state.settings.pricePerStick;
+}
+
+/* ---------- actions ---------- */
+function addStick(n){
+  const d=today(); state.log[d]=state.log[d]||[];
+  if(n>0){ state.log[d].push(Date.now()); }
+  else { state.log[d].pop(); }
+  haptic(n>0?'medium':'light'); save(); render();
+  if(n>0){ const L=currentLimit(); const s=smokedOn(d);
+    if(s>L) toast('⚠️ Лимит превышен на '+(s-L));
+    else if(s===L) toast('Всё, лимит на сегодня исчерпан 🚭');
+  }
+}
+function logCraving(intensity,note){
+  state.cravings.unshift({t:Date.now(),i:intensity,n:note||''});
+  if(state.cravings.length>200) state.cravings.length=200;
+  haptic('medium'); save(); render();
+}
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),2200); }
+
+/* ---------- views ---------- */
+function render(){
+  const el=document.getElementById('app');
+  if(tab==='today') el.innerHTML=viewToday();
+  else if(tab==='plan') el.innerHTML=viewPlan();
+  else if(tab==='stats') el.innerHTML=viewStats();
+  else if(tab==='sos') el.innerHTML=viewSos();
+  renderNav();
+}
+function renderNav(){
+  const items=[['today','📆','Сегодня'],['plan','📉','План'],['stats','📊','Стата'],['sos','🆘','SOS']];
+  document.getElementById('nav').innerHTML=items.map(([k,i,t])=>
+    `<a href="#" class="${tab===k?'on':''}" onclick="tab='${k}';haptic();render();return false"><span class="i">${i}</span>${t}</a>`).join('');
+}
+function header(title,sub){
+  return `<div class="row between" style="margin:4px 2px 14px">
+    <div><h1>${title}</h1><div class="sub">${sub}</div></div>
+    <button class="ghost sm" onclick="tab='settings';render()">⚙️</button></div>`;
+}
+
+function viewToday(){
+  const d=today(), s=smokedOn(d), L=currentLimit(), left=L-s;
+  const free=daysFree();
+  const pct=L>0?Math.min(100,Math.round(s/L*100)):100;
+  const over=s>L;
+  const ring=free>0
+    ? `<div class="hero"><div class="fire">🚭</div><div class="big">${free}<small> дн. без никотина</small></div>
+       <div class="muted" style="margin-top:8px">Ты молодец. Так держать 🦾</div></div>`
+    : `<div class="hero"><div class="muted">Сегодня выкурено</div>
+       <div class="big" style="color:${over?'var(--bad)':'var(--txt)'}">${s}<small> / ${L} стиков</small></div>
+       <div class="muted" style="margin-top:6px">${over?('Перебор на '+(-left)):(left===0?'Ровно лимит. Хватит на сегодня.':('Осталось '+left))}</div></div>
+       <div class="bar"><i style="width:${pct}%;background:${over?'var(--bad)':'var(--acc)'}"></i></div>`;
+  const last=lastTs(d);
+  return header('Не курю','День плана: '+(diffDays(state.startDate,d)+1))+`
+    <div class="card">${ring}</div>
+    <div class="grid2">
+      <button onclick="addStick(1)">🚬 +1 стик</button>
+      <button class="ghost" onclick="addStick(-1)">↩︎ −1 (отмена)</button>
+    </div>
+    ${last?`<div class="muted" style="text-align:center;margin:10px">Последний: ${new Date(last).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</div>`:''}
+    <div class="grid3" style="margin-top:12px">
+      <div class="stat"><span>Ряд под лимитом</span><b>${streakUnderLimit()}<small style="font-size:12px;color:var(--dim)"> дн</small></b></div>
+      <div class="stat"><span>Средн./день (7)</span><b>${avg7().toFixed(1)}</b></div>
+      <div class="stat"><span>Сэкономлено</span><b>${Math.round(savedTotal())}<small style="font-size:12px;color:var(--dim)"> ${state.settings.cur}</small></b></div>
+    </div>
+    ${s>=L&&!over?`<div class="note">Лимит на сегодня закрыт. Пойдём попьём воды и подышим 💧</div>`:''}
+  `;
+}
+
+function viewPlan(){
+  const cur=currentLimit(), start=state.plan.startLimit;
+  const prog=start>0?Math.round((start-cur)/Math.max(1,start)*100):100;
+  const nxt=nextStep(); const zd=zeroDate();
+  let rows='';
+  for(let i=0;i<=10;i++){
+    const d=new Date(); d.setDate(d.getDate()+i*state.plan.everyDays);
+    const ds=fmtD(d); const l=limitFor(ds);
+    rows+=`<div class="step ${i===0?'now':''}"><span>${i===0?'сейчас':(i===1?'через '+state.plan.everyDays+' дн':human(ds))}</span><span>${l} стик${l===1?'':(l>=2&&l<=4?'а':'ов')}</span></div>`;
+  }
+  return header('План снижения','Цель: ноль')+`
+    <div class="card">
+      <div class="row between"><div><div class="muted">Текущий лимит</div><div class="big" style="font-size:34px">${cur}<small> стиков/день</small></div></div>
+      <button class="ghost sm" onclick="tab='settings';render()">Изменить</button></div>
+      <div class="bar"><i style="width:${prog}%"></i></div>
+      <div class="muted" style="margin-top:6px">Прогресс к нулю: ${prog}%</div>
+    </div>
+    <div class="card">
+      <div class="row between"><span class="muted">Следующее снижение</span><b>${nxt?human(nxt.date)+' → '+nxt.limit+(nxt.limit===0?' (ноль 🚭)':''):'—'}</b></div>
+      ${zd?`<div class="row between" style="margin-top:8px"><span class="muted">Плановая дата «ноль»</span><b>${human(zd)}</b></div>`:''}
+    </div>
+    <div class="card"><div class="muted" style="margin-bottom:6px">График снижения</div>${rows}</div>
+    <div class="note">Правило: −${state.plan.step} стика каждые ${state.plan.everyDays} дн. Если стало тяжело — держи текущий лимит, но не поднимай. Дальше вниз.</div>
+  `;
+}
+
+function viewStats(){
+  let bars='';
+  const arr=[];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); arr.push(fmtD(d)); }
+  const max=Math.max(1,...arr.map(d=>Math.max(smokedOn(d),limitFor(d))));
+  arr.forEach(ds=>{
+    const s=smokedOn(ds), L=limitFor(ds); const h=Math.round(s/max*100); const over=s>L;
+    const wd=['вс','пн','вт','ср','чт','пт','сб'][parseD(ds).getDay()];
+    bars+=`<div class="col" title="${human(ds)}: ${s}/${L}"><i class="${s===0?'empty':(over?'over':'')}" style="height:${Math.max(3,h)}%"></i><span>${wd}</span></div>`;
+  });
+  const badges=[
+    [1,'🥉','1 день под лимитом',streakUnderLimit()>=1],
+    [3,'🥈','3 дня подряд',streakUnderLimit()>=3],
+    [7,'🥇','Неделя под лимитом',streakUnderLimit()>=7],
+    [14,'🏆','2 недели',streakUnderLimit()>=14],
+    [30,'💎','Месяц',streakUnderLimit()>=30],
+    [0,'🚭','1 день без никотина',daysFree()>=1],
+    [0,'🌟','Неделя без никотина',daysFree()>=7],
+  ];
+  return header('Статистика','Твой прогресс')+`
+    <div class="card"><div class="muted">Последние 7 дней (стики)</div><div class="chart">${bars}</div></div>
+    <div class="grid2">
+      <div class="stat"><span>Всего выкурено</span><b>${total()}</b></div>
+      <div class="stat"><span>Средн./день (7)</span><b>${avg7().toFixed(1)}</b></div>
+      <div class="stat"><span>За неделю потрачено</span><b>${Math.round(spent7())} ${state.settings.cur}</b></div>
+      <div class="stat"><span>Сэкономлено всего</span><b>${Math.round(savedTotal())} ${state.settings.cur}</b></div>
+    </div>
+    <div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:4px">Достижения</div>
+      ${badges.map(b=>`<div class="badge ${b[3]?'':'off'}"><span class="e">${b[1]}</span><span>${b[2]}</span></div>`).join('')}
+    </div>
+    <button class="ghost" style="width:100%" onclick="copyReport()">📋 Скопировать отчёт для Оскара</button>
+  `;
+}
+
+function viewSos(){
+  const cs=state.cravings.slice(0,6);
+  return header('Накрыло?','Дыши. Это пройдёт за 3–5 минут')+`
+    <div class="card">
+      <div class="muted">Таймер передышки — просто подожди, тяга уйдёт</div>
+      <div class="row center" style="margin:10px 0"><div class="timer" id="sosT">05:00</div></div>
+      <div class="grid2">
+        <button onclick="startSos(300)">▶️ 5 минут</button>
+        <button class="ghost" onclick="startSos(120)">⚡ 2 минуты</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="muted" style="margin-bottom:6px">Что сделать прямо сейчас</div>
+      <div class="badge"><span class="e">💧</span><span>Выпей воды, мелкими глотками</span></div>
+      <div class="badge"><span class="e">🌬</span><span>Дыхание 4-7-8: вдох 4с, задержка 7с, выдох 8с — 5 раз</span></div>
+      <div class="badge"><span class="e">🚶</span><span>Встань и пройдись 3 минуты</span></div>
+      <div class="badge"><span class="e">🍬</span><span>Жвачка / семечки / зубочистка — займи рот</span></div>
+      <div class="badge"><span class="e">📵</span><span>Убери айкос из поля зрения хотя бы на 10 минут</span></div>
+    </div>
+    <div class="grid2">
+      <button onclick="logCraving(2)">💪 Пережил тягу</button>
+      <button class="warn" onclick="logCraving(3)">😤 Было очень тяжело</button>
+    </div>
+    ${cs.length?`<div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:4px">Последние тяги</div>
+      ${cs.map(c=>`<div class="step"><span>${new Date(c.t).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span><span>${'🔥'.repeat(c.i)}</span></div>`).join('')}
+    </div>`:''}
+    <div class="note">Помни: пик ломки — первые 3 дня. Тяга длится 3–5 минут и всегда проходит. Тебе не надо решать «навсегда», надо продержаться 5 минут.</div>
+  `;
+}
+
+function viewSettings(){
+  const s=state;
+  return header('Настройки','Параметры плана')+`
+    <div class="card">
+      <label>Дата старта плана</label><input type="date" id="sd" value="${s.startDate}">
+      <label>Дата полного отказа («ноль», опц.)</label><input type="date" id="qd" value="${s.quitDate||''}">
+      <label>Стартовый лимит (стиков/день)</label><input type="number" id="sl" value="${s.plan.startLimit}">
+      <label>Снижать на (стиков)</label><input type="number" id="st" value="${s.plan.step}">
+      <label>Каждые (дней)</label><input type="number" id="ev" value="${s.plan.everyDays}">
+      <label>Цена 1 стика (${s.settings.cur})</label><input type="number" id="pp" value="${s.settings.pricePerStick}">
+      <button style="width:100%;margin-top:14px" onclick="saveSettings()">💾 Сохранить</button>
+    </div>
+    <div class="card">
+      <div class="muted">Данные хранятся в облаке Telegram (CloudStorage) — доступны только тебе, синхронизируются между устройствами.</div>
+      <button class="ghost" style="width:100%;margin-top:10px" onclick="if(confirm('Сбросить все данные?')){state=JSON.parse(JSON.stringify(DEFAULT));save();tab='today';render()}">🗑 Сбросить всё</button>
+    </div>
+    <button class="ghost" style="width:100%" onclick="tab='today';render()">← Назад</button>
+  `;
+}
+function saveSettings(){
+  const g=id=>document.getElementById(id).value;
+  state.startDate=g('sd')||today();
+  state.quitDate=g('qd')||null;
+  state.plan.startLimit=Math.max(0,+g('sl')||0);
+  state.plan.step=Math.max(1,+g('st')||1);
+  state.plan.everyDays=Math.max(1,+g('ev')||7);
+  state.settings.pricePerStick=Math.max(0,+g('pp')||0);
+  state.manualLimit={}; save(); haptic('medium'); toast('Сохранено ✓'); tab='today'; render();
+}
+function copyReport(){
+  const d=today();
+  const txt=`🚭 Отчёт трекера (${human(d)})
+Лимит: ${currentLimit()}, сегодня: ${smokedOn(d)}
+День плана: ${diffDays(state.startDate,d)+1}
+Ряд под лимитом: ${streakUnderLimit()} дн
+Без никотина: ${daysFree()} дн
+Всего: ${total()}, средн/день(7): ${avg7().toFixed(1)}
+Сэкономлено: ${Math.round(savedTotal())} ${state.settings.cur}`;
+  navigator.clipboard?.writeText(txt).then(()=>toast('Отчёт скопирован 📋'),()=>toast('Не вышло скопировать'));
+}
+function startSos(sec){
+  const el=document.getElementById('sosT'); if(!el) return;
+  clearInterval(sosTimer); let t=sec; haptic('medium');
+  const tick=()=>{ el.textContent=pad(Math.floor(t/60))+':'+pad(t%60);
+    if(t<=0){ clearInterval(sosTimer); el.textContent='✅ Ты пережил!'; logCraving(2); return; } t--; };
+  tick(); sosTimer=setInterval(tick,1000);
+}
+window.tab=tab;
+
+load(()=>{ render(); });
+</script>
+</body>
+</html>
