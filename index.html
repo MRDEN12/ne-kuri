@@ -103,6 +103,7 @@ label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
 @keyframes fl{0%{left:-8%;bottom:28%}50%{bottom:38%}100%{left:106%;bottom:30%}}
 .firefly{position:absolute;z-index:1;font-size:9px;animation:ff 4s ease-in-out infinite}
 @keyframes ff{0%,100%{opacity:0;transform:translateY(0)}50%{opacity:1;transform:translateY(-14px)}}
+.bgimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;border-radius:16px}
 .decor img{width:46px;height:auto;display:block}
 .fly img{width:38px;height:auto}
 .tree{max-width:76%;height:auto}
@@ -135,7 +136,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925121845';
+const APP_ID='20260925125252';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -380,7 +381,7 @@ function viewGarden(){const g=state.garden;
  const dec=g.decor.map((id,i)=>{const it=SHOP.find(s=>s.id===id);if(!it)return'';
   const pos=[['6%','74%'],['78%','76%'],['12%','56%'],['80%','54%'],['28%','16%'],['64%','18%']][i%6];
   return '<span class="decor" style="left:'+pos[0]+';top:'+pos[1]+'"><img src="assets/deco_'+id+'.png" alt=""></span>';}).join('');
- const scene='<div class="scene" data-bg="'+g.bg+'">'+skyLayer(g.bg)+leafLayer(6)+birdLayer()+dec+
+ const scene='<div class="scene" data-bg="'+g.bg+'"><img class="bgimg" src="assets/bg_'+g.bg+'.jpg" alt="" onerror="this.style.display=&quot;none&quot;">'+skyLayer(g.bg)+leafLayer(6)+birdLayer()+dec+
   '<img class="tree" src="assets/tree_'+treeStage()+'.png" style="width:'+treeW()+'px" alt=""><div class="grass">🌿🌿🌿</div>'+
   '<div class="leaves" style="margin-top:6px;background:rgba(0,0,0,.25);color:#fff;padding:3px 10px;border-radius:20px">🍃 '+g.leaves+'</div></div>';
  const cats=[['decor','Украшения'],['bg','Фон']];
