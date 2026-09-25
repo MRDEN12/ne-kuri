@@ -7,558 +7,512 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{
-  --bg:#0e1013; --card:#171a1f; --card2:#1e2228; --line:#272c33;
-  --txt:#e8ebef; --dim:#8b949e; --acc:#34d399; --acc2:#22c55e;
-  --warn:#fbbf24; --bad:#f87171; --blue:#60a5fa;
+  --bg:#0e1013;--card:#171a1f;--card2:#1e2228;--line:#272c33;--txt:#e8ebef;--dim:#8b949e;
+  --acc:#34d399;--warn:#fbbf24;--bad:#f87171;--blue:#60a5fa;--sky:#0b1220;
 }
+body[data-theme="light"]{--bg:#f2f4f7;--card:#ffffff;--card2:#f6f8fa;--line:#e3e8ee;--txt:#12161c;--dim:#66707a;--sky:#dbeafe}
+body[data-theme="mid"]{--bg:#141a20;--card:#1c242c;--card2:#222c35;--line:#2c3843;--txt:#e6edf3;--dim:#94a3b0;--sky:#16222e}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Segoe UI,sans-serif;font-size:16px}
-body{padding-bottom:78px;overscroll-behavior:none}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Segoe UI,sans-serif;font-size:16px}
+body{padding-bottom:80px;overscroll-behavior:none}
 .wrap{padding:14px 14px 0}
 h1{font-size:17px;margin:0;font-weight:600}
+h2{font-size:20px;margin:6px 0}
 .sub{color:var(--dim);font-size:12.5px;margin-top:2px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
 .big{font-size:44px;font-weight:700;line-height:1;letter-spacing:-1px}
 .big small{font-size:16px;color:var(--dim);font-weight:500;letter-spacing:0}
 .row{display:flex;align-items:center;gap:10px}
-.between{justify-content:space-between}
-.center{justify-content:center}
+.between{justify-content:space-between}.center{justify-content:center}
 .muted{color:var(--dim);font-size:13px}
-.bar{height:10px;border-radius:6px;background:#23282f;overflow:hidden;margin-top:10px}
+.bar{height:10px;border-radius:6px;background:var(--card2);overflow:hidden;margin-top:10px}
 .bar>i{display:block;height:100%;background:var(--acc);border-radius:6px;transition:width .35s}
-button{font-family:inherit;font-size:15px;border:none;border-radius:12px;padding:13px 16px;color:#08130d;
-  background:var(--acc);font-weight:600;cursor:pointer;transition:transform .06s}
+button{font-family:inherit;font-size:15px;border:none;border-radius:12px;padding:13px 16px;color:#08130d;background:var(--acc);font-weight:600;cursor:pointer;transition:transform .06s}
 button:active{transform:scale(.97)}
 button.ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
 button.warn{background:var(--warn);color:#231a00}
 button.bad{background:var(--bad);color:#2a0b0b}
 button.sm{padding:9px 12px;font-size:13.5px;border-radius:10px}
+button.wide{width:100%}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px}
 .stat b{display:block;font-size:21px;margin-top:2px}
 .stat span{font-size:11.5px;color:var(--dim)}
+.stat.tap{cursor:pointer}
 .step{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
-.step:last-child{border:none}
-.step .d{color:var(--dim)}
-.step.now{color:var(--acc);font-weight:600}
+.step:last-child{border:none}.step .d{color:var(--dim)}.step.now{color:var(--acc);font-weight:600}
 .chart{display:flex;align-items:flex-end;gap:6px;height:110px;margin-top:6px}
 .chart .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
 .chart .col i{width:100%;border-radius:5px 5px 0 0;background:var(--acc);min-height:3px;transition:height .3s}
-.chart .col i.over{background:var(--bad)}
-.chart .col i.empty{background:#2b3138}
+.chart .col i.over{background:var(--bad)}.chart .col i.empty{background:var(--card2)}
 .chart .col span{font-size:10px;color:var(--dim)}
 .badge{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
-.badge:last-child{border:none}
-.badge.off{opacity:.35}
-.badge .e{font-size:20px;width:26px;text-align:center}
-.nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(14,16,19,.94);
-  border-top:1px solid var(--line);backdrop-filter:blur(12px);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.badge:last-child{border:none}.badge.off{opacity:.35}.badge .e{font-size:20px;width:26px;text-align:center}
+.nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:color-mix(in srgb,var(--bg) 92%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(12px);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
 .nav a{flex:1;text-align:center;color:var(--dim);text-decoration:none;font-size:10.5px;padding:5px 0;border-radius:12px}
-.nav a.on{color:var(--acc)}
-.nav a .i{display:block;font-size:20px;line-height:1.25}
-input,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
-  border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit}
+.nav a.on{color:var(--acc)}.nav a .i{display:block;font-size:20px;line-height:1.25}
+input,select,textarea{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit}
 label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
-.pill{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;background:var(--card2);border:1px solid var(--line)}
 .hero{text-align:center;padding:22px 16px}
 .fire{font-size:30px}
 .timer{font-size:56px;font-weight:700;letter-spacing:-2px;font-variant-numeric:tabular-nums}
-.note{background:#14231b;border:1px solid #1f3a2b;border-radius:12px;padding:11px 12px;font-size:13.5px;color:#a7e0c1;margin-top:10px}
-.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#e8ebef;color:#111;
-  padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+.note{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:13.5px;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:98px;transform:translateX(-50%);background:var(--txt);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
 .toast.on{opacity:1}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:120}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:120;overflow:auto}
 .modal.on{display:flex}
-.sheet{width:100%;background:var(--card);border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));text-align:center;animation:up .2s ease}
-@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
-.sheet h2{font-size:21px;margin:6px 0}
-.fine{background:#2a1414;border:1px solid #572222;color:#ffb4b4;border-radius:12px;padding:13px;margin-top:12px;font-size:19px;font-weight:700}
+.sheet{width:100%;background:var(--card);border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));text-align:center}
+.fine{background:color-mix(in srgb,var(--bad) 14%,transparent);border:1px solid color-mix(in srgb,var(--bad) 45%,transparent);color:var(--bad);border-radius:12px;padding:13px;margin-top:12px;font-size:19px;font-weight:700}
 .wish{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;opacity:.5}
-.wish:last-of-type{border:none}
-.wish.ok{opacity:1}
-.wish .e{font-size:20px;width:24px;text-align:center}
-.stat.tap{cursor:pointer}
+.wish:last-of-type{border:none}.wish.ok{opacity:1}.wish .e{font-size:20px;width:24px;text-align:center}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:8px 13px;font-size:13.5px;cursor:pointer}
+.chip.on{background:var(--acc);color:#08130d;border-color:transparent;font-weight:600}
+/* сад */
+.scene{border-radius:16px;padding:18px;text-align:center;position:relative;overflow:hidden;min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.scene[data-bg="day"]{background:linear-gradient(#bfe3ff,#e8f5e9)}
+.scene[data-bg="sunset"]{background:linear-gradient(#ffb27a,#ffe3c2,#f5e6c8)}
+.scene[data-bg="night"]{background:linear-gradient(#0b1220,#1b2740,#243352)}
+.scene[data-bg="space"]{background:linear-gradient(#0a0a1f,#1a1030,#2a1548)}
+.tree{font-size:76px;line-height:1;filter:drop-shadow(0 6px 8px rgba(0,0,0,.25));transition:font-size .4s}
+.grass{font-size:22px;letter-spacing:6px;opacity:.9}
+.decor{position:absolute;font-size:24px}
+.leaves{font-size:13px;color:var(--dim)}
+.shopitem{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.shopitem:last-child{border:none}.shopitem .e{font-size:26px;width:34px;text-align:center}
+/* чат */
+.chat{display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
+.bub{max-width:84%;padding:10px 13px;border-radius:16px;font-size:14.5px;line-height:1.35;white-space:pre-wrap;word-break:break-word}
+.bub.me{align-self:flex-end;background:var(--acc);color:#08130d;border-bottom-right-radius:5px}
+.bub.bot{align-self:flex-start;background:var(--card2);border:1px solid var(--line);border-bottom-left-radius:5px}
+.bub.typing{color:var(--dim);font-style:italic}
+.chatinput{position:fixed;left:0;right:0;bottom:80px;display:flex;gap:8px;padding:8px 14px;background:color-mix(in srgb,var(--bg) 95%,transparent);border-top:1px solid var(--line)}
+.chatinput textarea{height:44px;padding:11px 12px;resize:none}
 </style>
 </head>
-<body>
+<body data-theme="dark">
 <div class="wrap" id="app"></div>
 <div class="nav" id="nav"></div>
 <div class="toast" id="toast"></div>
 <div class="modal" id="modal"></div>
 
 <script>
-const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-if (TG){ try{ TG.ready(); TG.expand(); TG.setHeaderColor && TG.setHeaderColor('#0e1013'); TG.enableClosingConfirmation && TG.enableClosingConfirmation(); }catch(e){} }
-const haptic=(t)=>{ try{ TG && TG.HapticFeedback && TG.HapticFeedback.impactOccurred(t||'light'); }catch(e){} };
+const APP_VER='v3 · 25.09.2026';
+const APP_ID='20260925100931';
+const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
+if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
+const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
+let API_BASE='';
+(function(){try{fetch('api.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{if(d&&d.base)API_BASE=String(d.base).replace(/\/$/,'');}).catch(()=>{});}catch(e){}})();
 
-const APP_VER='v2 · 25.09.2026';
-const APP_ID='20260925075234';
-const DAY=86400000;
-const pad=n=>String(n).padStart(2,'0');
+const DAY=86400000,pad=n=>String(n).padStart(2,'0');
 const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const today=()=>fmtD(new Date());
 const parseD=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
 const diffDays=(a,b)=>Math.round((parseD(b)-parseD(a))/DAY);
 const human=s=>{const a=s.split('-');return a[2]+'.'+a[1]+'.'+a[0];};
+const MIN_PER_STICK=6;
 
 const PENALTY_PRESETS=[
-  {k:'pushup',n:'Отжимания',u:'раз',min:10,max:20,step:2},
-  {k:'squat',n:'Приседания',u:'раз',min:15,max:30,step:5},
-  {k:'plank',n:'Планка',u:'сек',min:30,max:90,step:10},
-  {k:'cold',n:'Холодный душ',u:'мин',min:2,max:5,step:1},
-  {k:'water',n:'Два стакана воды',u:'',min:0,max:0,step:1}
-];
+ {k:'pushup',n:'Отжимания',u:'раз',min:10,max:20,step:2},
+ {k:'squat',n:'Приседания',u:'раз',min:15,max:30,step:5},
+ {k:'plank',n:'Планка',u:'сек',min:30,max:90,step:10},
+ {k:'cold',n:'Холодный душ',u:'мин',min:2,max:5,step:1},
+ {k:'water',n:'Два стакана воды',u:'',min:0,max:0,step:1}];
+const TRIGGERS=['Стресс','Скука','После еды','Кофе','Компания','Алкоголь','Недосып','Машина','Усталость'];
+const HELPERS=['Вода','Прогулка','Дыхание','Отвлёкся','Жвачка','Потерпел','Написал Оскару'];
 const WISH=[
-  {e:'☕',n:'Кофе в кофейне',p:900},
-  {e:'🍜',n:'Обед в кафе',p:4000},
-  {e:'🎬',n:'Кино на двоих',p:5000},
-  {e:'🧵',n:'Катушка PLA (1 кг)',p:6000},
-  {e:'🌶️',n:'Катушка PETG-CF',p:12000},
-  {e:'🍣',n:'Ужин в ресторане',p:18000},
-  {e:'🏋️',n:'Месяц спортзала',p:20000},
-  {e:'🔩',n:'Катушка PA6-CF',p:25000},
-  {e:'🎧',n:'Хорошие наушники',p:60000},
-  {e:'📱',n:'Новый смартфон',p:250000},
-  {e:'🖨️',n:'Ещё один P1S',p:450000},
-  {e:'💻',n:'Игровой ноутбук',p:900000}
-];
-const DEFAULT={
-  v:1,
-  startDate: today(),
-  quitDate: null,
-  plan:{startLimit:20, step:2, everyDays:7},
-  manualLimit:{},
-  log:{},
-  cravings:[],
-  penalties:[],
-  settings:{pricePerStick:38, cur:'₸', oldDaily:90, activeHours:16, cooldownMode:'auto', cooldownMin:50, penaltyOn:true}
-};
-let state=JSON.parse(JSON.stringify(DEFAULT));
-let tab='today';
-let sosTimer=null;
+ {e:'☕',n:'Кофе в кофейне',p:900},{e:'🍜',n:'Обед в кафе',p:4000},{e:'🎬',n:'Кино на двоих',p:5000},
+ {e:'🧵',n:'Катушка PLA (1 кг)',p:6000},{e:'🌶️',n:'Катушка PETG-CF',p:12000},{e:'🍣',n:'Ужин в ресторане',p:18000},
+ {e:'🏋️',n:'Месяц спортзала',p:20000},{e:'🔩',n:'Катушка PA6-CF',p:25000},{e:'🎧',n:'Хорошие наушники',p:60000},
+ {e:'📱',n:'Новый смартфон',p:250000},{e:'🖨️',n:'Ещё один P1S',p:450000},{e:'💻',n:'Игровой ноутбук',p:900000}];
+const SHOP=[
+ {id:'oak',cat:'tree',e:'🌳',n:'Дуб',p:0},{id:'pine',cat:'tree',e:'🌲',n:'Сосна',p:30},
+ {id:'palm',cat:'tree',e:'🌴',n:'Пальма',p:60},{id:'sakura',cat:'tree',e:'🌸',n:'Сакура',p:120},
+ {id:'cactus',cat:'tree',e:'🌵',n:'Кактус-босс',p:200},
+ {id:'bird',cat:'decor',e:'🐦',n:'Птичка',p:25},{id:'lantern',cat:'decor',e:'🏮',n:'Фонарик',p:35},
+ {id:'turtle',cat:'decor',e:'🐢',n:'Черепаха',p:40},{id:'fountain',cat:'decor',e:'⛲',n:'Фонтан',p:50},
+ {id:'kite',cat:'decor',e:'🪁',n:'Змей',p:45},{id:'rainbow',cat:'decor',e:'🌈',n:'Радуга',p:80},
+ {id:'day',cat:'bg',e:'☀️',n:'День',p:0},{id:'sunset',cat:'bg',e:'🌇',n:'Закат',p:40},
+ {id:'night',cat:'bg',e:'🌙',n:'Ночь',p:60},{id:'space',cat:'bg',e:'🌌',n:'Космос',p:100}];
+const ACCENTS={green:'#34d399',blue:'#60a5fa',violet:'#a78bfa',pink:'#f472b6',orange:'#fb923c',red:'#f87171'};
 
-/* ---------- storage ---------- */
-function merge(o){ // shallow-merge into defaults
-  state=Object.assign({},JSON.parse(JSON.stringify(DEFAULT)),o||{});
-  state.plan=Object.assign({},DEFAULT.plan,(o&&o.plan)||{});
-  state.settings=Object.assign({},DEFAULT.settings,(o&&o.settings)||{});
-}
-function save(){
-  const s=JSON.stringify(state);
-  if(TG&&TG.CloudStorage){ TG.CloudStorage.setItem('nk_state',s,()=>{}); }
-  try{ localStorage.setItem('nk_state',s); }catch(e){}
-}
-function load(cb){
-  if(TG&&TG.CloudStorage){
-    TG.CloudStorage.getItem('nk_state',(err,val)=>{
-      if(val){ try{ merge(JSON.parse(val)); }catch(e){} }
-      else { try{ const l=localStorage.getItem('nk_state'); if(l) merge(JSON.parse(l)); }catch(e){} }
-      cb&&cb();
-    });
-  } else {
-    try{ const l=localStorage.getItem('nk_state'); if(l) merge(JSON.parse(l)); }catch(e){}
-    cb&&cb();
-  }
-}
+const DEFAULT={v:3,startDate:today(),quitDate:null,plan:{startLimit:20,step:2,everyDays:7},
+ manualLimit:{},log:{},cravings:[],penalties:[],slips:[],chat:[],
+ garden:{leaves:0,tree:'oak',decor:[],bg:'day',lastTick:null,bought:{oak:1,day:1}},
+ settings:{pricePerStick:38,cur:'₸',activeHours:16,cooldownMode:'auto',cooldownMin:50,penaltyOn:true,
+           theme:'dark',accent:'green',quietFrom:23,quietTo:8,sound:'none'}};
+let state=JSON.parse(JSON.stringify(DEFAULT)),tab='today',cdTick=null,cdFired=false,cdInit=false,sosTimer=null;
 
-/* ---------- domain ---------- */
-function limitFor(dateStr){
-  if(state.manualLimit[dateStr]!=null) return state.manualLimit[dateStr];
-  const di=diffDays(state.startDate,dateStr);
-  if(di<0) return state.plan.startLimit;
-  if(state.quitDate){ const qi=diffDays(state.startDate,state.quitDate); if(di>=qi) return 0; }
-  const dec=Math.floor(di/state.plan.everyDays)*state.plan.step;
-  return Math.max(0,state.plan.startLimit-dec);
-}
+function merge(o){state=Object.assign({},JSON.parse(JSON.stringify(DEFAULT)),o||{});
+ state.plan=Object.assign({},DEFAULT.plan,(o&&o.plan)||{});
+ state.settings=Object.assign({},DEFAULT.settings,(o&&o.settings)||{});
+ state.garden=Object.assign({},DEFAULT.garden,(o&&o.garden)||{});
+ state.garden.bought=Object.assign({oak:1,day:1},(o&&o.garden&&o.garden.bought)||{});}
+function save(){const s=JSON.stringify(state);if(TG&&TG.CloudStorage){TG.CloudStorage.setItem('nk_state',s,()=>{});}try{localStorage.setItem('nk_state',s);}catch(e){}}
+function load(cb){if(TG&&TG.CloudStorage){TG.CloudStorage.getItem('nk_state',(e,v)=>{if(v){try{merge(JSON.parse(v));}catch(x){}}else{try{const l=localStorage.getItem('nk_state');if(l)merge(JSON.parse(l));}catch(x){}}cb&&cb();});}
+ else{try{const l=localStorage.getItem('nk_state');if(l)merge(JSON.parse(l));}catch(e){}cb&&cb();}}
+
+/* ---------- домен ---------- */
+function limitFor(ds){if(state.manualLimit[ds]!=null)return state.manualLimit[ds];
+ const di=diffDays(state.startDate,ds);if(di<0)return state.plan.startLimit;
+ if(state.quitDate){const qi=diffDays(state.startDate,state.quitDate);if(di>=qi)return 0;}
+ return Math.max(0,state.plan.startLimit-Math.floor(di/state.plan.everyDays)*state.plan.step);}
 const smokedOn=d=>(state.log[d]||[]).length;
 const lastTs=d=>{const a=state.log[d]||[];return a.length?a[a.length-1]:null;};
-function lastAnyStickTs(){ let m=0; for(const k in state.log){ for(const t of state.log[k]) if(t>m) m=t; } return m||0; }
-function cooldownMin(){
-  const s=state.settings, L=currentLimit();
-  if(L<=0) return Math.max(1,(+s.activeHours||16)*60);
-  if(s.cooldownMode==='manual') return Math.max(1,+s.cooldownMin||1);
-  return Math.max(1, Math.round((+s.activeHours||16)*60/L));
-}
+function lastAny(){let m=0;for(const k in state.log)for(const t of state.log[k])if(t>m)m=t;return m||0;}
+function cooldownMin(){const s=state.settings,L=currentLimit();
+ if(L<=0)return Math.max(1,(+s.activeHours||16)*60);
+ if(s.cooldownMode==='manual')return Math.max(1,+s.cooldownMin||1);
+ return Math.max(1,Math.round((+s.activeHours||16)*60/L));}
 const cooldownMs=()=>cooldownMin()*60000;
-function cooldownLeftMs(){ const t=lastAnyStickTs(); return t? Math.max(0, t+cooldownMs()-Date.now()) : 0; }
-function currentLimit(){ return limitFor(today()); }
-function nextStep(){ // {date, limit} when limit drops next
-  const todayL=currentLimit();
-  for(let i=1;i<=120;i++){
-    const d=new Date(); d.setDate(d.getDate()+i); const ds=fmtD(d);
-    const l=limitFor(ds);
-    if(l<todayL) return {date:ds,limit:l};
-    if(state.quitDate && l===0) return {date:ds,limit:0};
-  }
-  return null;
-}
-function zeroDate(){
-  for(let i=0;i<=400;i++){
-    const d=new Date(); d.setDate(d.getDate()+i); const ds=fmtD(d);
-    if(limitFor(ds)===0) return ds;
-  }
-  return null;
-}
-function streakUnderLimit(){
-  // consecutive days (ending today) with data and smoked<=limit
-  let n=0; const d=new Date();
-  for(let i=0;i<400;i++){
-    const ds=fmtD(d); const s=smokedOn(ds); const L=limitFor(ds);
-    if(s===0 && i>0){ d.setDate(d.getDate()-1); continue; } // skip days w/o data (except today)
-    if(s<=L) n++; else break;
-    d.setDate(d.getDate()-1);
-  }
-  return n;
-}
-function daysFree(){
-  if(!state.quitDate) return 0;
-  const q=parseD(state.quitDate); const t=new Date(); q.setHours(0,0,0,0); t.setHours(0,0,0,0);
-  let n=Math.floor((t-q)/DAY);
-  if(n<0) return 0;
-  // only count if actually 0 since quit
-  for(let i=0;i<=n;i++){ const d=new Date(q); d.setDate(d.getDate()+i); if(smokedOn(fmtD(d))>0) return 0; }
-  return n;
-}
-function total(){ let t=0; for(const k in state.log) t+=state.log[k].length; return t; }
-function avg7(){ let s=0; for(let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); s+=smokedOn(fmtD(d)); } return s/7; }
-function spent7(){ let s=0; for(let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); s+=smokedOn(fmtD(d)); } return s*state.settings.pricePerStick; }
-function savedTotal(){
-  const di=Math.max(0,diffDays(state.startDate,today()));
-  let planSum=0;
-  for(let i=0;i<=di;i++){ const d=new Date(state.startDate+'T00:00:00'); d.setDate(d.getDate()+i); planSum+=limitFor(fmtD(d)); }
-  return Math.max(0,(planSum-total()))*state.settings.pricePerStick;
+function cooldownLeft(){const t=lastAny();return t?Math.max(0,t+cooldownMs()-Date.now()):0;}
+const currentLimit=()=>limitFor(today());
+function nextStep(){const L=currentLimit();for(let i=1;i<=120;i++){const d=new Date();d.setDate(d.getDate()+i);const l=limitFor(fmtD(d));if(l<L)return{date:fmtD(d),limit:l};}return null;}
+function zeroDate(){for(let i=0;i<=400;i++){const d=new Date();d.setDate(d.getDate()+i);if(limitFor(fmtD(d))===0)return fmtD(d);}return null;}
+function streakUnder(){let n=0;const d=new Date();for(let i=0;i<400;i++){const ds=fmtD(d);const s=smokedOn(ds);if(s===0&&i>0){d.setDate(d.getDate()-1);continue;}if(s<=limitFor(ds))n++;else break;d.setDate(d.getDate()-1);}return n;}
+function daysFree(){if(!state.quitDate)return 0;const q=parseD(state.quitDate);const t=new Date();q.setHours(0,0,0,0);t.setHours(0,0,0,0);let n=Math.floor((t-q)/DAY);if(n<0)return 0;for(let i=0;i<=n;i++){const d=new Date(q);d.setDate(d.getDate()+i);if(smokedOn(fmtD(d))>0)return 0;}return n;}
+function total(){let t=0;for(const k in state.log)t+=state.log[k].length;return t;}
+function avg7(){let s=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);s+=smokedOn(fmtD(d));}return s/7;}
+function spent7(){let s=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);s+=smokedOn(fmtD(d));}return s*state.settings.pricePerStick;}
+function avoided(){let n=0;const di=Math.max(0,diffDays(state.startDate,today()));for(let i=0;i<=di;i++){const d=parseD(state.startDate);d.setDate(d.getDate()+i);const l=limitFor(fmtD(d));n+=Math.max(0,l-smokedOn(fmtD(d)));}return n;}
+function timeSavedMin(){return avoided()*MIN_PER_STICK;}
+const hm=m=>Math.floor(m/60)+' ч '+(m%60)+' мин';
+function savedMoney(){return avoided()*state.settings.pricePerStick;}
+
+/* ---------- листья (валюта) ---------- */
+function yest(){const d=new Date();d.setDate(d.getDate()-1);return fmtD(d);}
+function accrue(){
+ const g=state.garden;let cur=g.lastTick;
+ if(!cur){g.lastTick=yest();return;}
+ const start=state.startDate;
+ if(diffDays(cur,yest())<1){return;}
+ let d=parseD(cur);d.setDate(d.getDate()+1);
+ let guard=0;
+ while(fmtD(d)<=yest()&&guard++<400){
+   const ds=fmtD(d);const s=smokedOn(ds),L=limitFor(ds);
+   if(s<=L){g.leaves+=5;if(s===0)g.leaves+=5;}
+   d.setDate(d.getDate()+1);
+ }
+ g.lastTick=yest();
 }
 
-/* ---------- actions ---------- */
-function addStick(n){
-  const d=today(); state.log[d]=state.log[d]||[];
-  if(n<0){ state.log[d].pop(); haptic('light'); save(); render(); return; }
-  const left=cooldownLeftMs();
-  const L=currentLimit();
-  const early = state.settings.penaltyOn && (left>0 || L===0);
-  state.log[d].push(Date.now());
-  notifyServer();
-  if(early){
-    const p=makePenalty(left,L);
-    state.penalties.unshift(p);
-    haptic('heavy'); save(); render(); showPenaltyModal(p,L);
-    return;
-  }
-  haptic('medium'); save(); render();
-  const s=smokedOn(d);
-  if(s>L) toast('⚠️ Лимит превышен на '+(s-L));
-  else if(s===L) toast('Всё, лимит на сегодня исчерпан 🚭');
-  else toast('Записал 👍 следующий через '+cooldownMin()+' мин');
-}
-function notifyServer(){
-  if(!API_BASE) return;
-  const d=today(), L=currentLimit(), s=smokedOn(d);
-  const payload={ initData:(TG&&TG.initData)||'', cooldownMin:cooldownMin(), limit:L, left:Math.max(0,L-s), over:Math.max(0,s-L) };
-  try{ fetch(API_BASE+'/hit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{}); }catch(e){}
-}
-function randAmt(p){ if(!p.max) return 0; const n=Math.floor((p.max-p.min)/p.step)+1; return p.min+Math.floor(Math.random()*n)*p.step; }
-function makePenalty(leftMs,L){
-  const p=PENALTY_PRESETS[Math.floor(Math.random()*PENALTY_PRESETS.length)];
-  const late=leftMs>0?Math.ceil(leftMs/60000):0;
-  return { id:Date.now()+''+Math.floor(Math.random()*1000), ts:Date.now(), k:p.k, name:p.n, unit:p.u,
-           amt:randAmt(p), done:false, why: L===0 ? 'стик в день «ноль»' : ('рано на '+late+' мин') };
-}
-function showPenaltyModal(p,L){
-  const m=document.getElementById('modal');
-  m.innerHTML='<div class="sheet"><div style="font-size:38px">⛔</div>'+
-    '<h2>Рано!</h2>'+
-    '<div class="muted">'+(L===0?'Ты на нуле — стик это срыв.':'Выкурил раньше паузы ('+cooldownMin()+' мин).')+'</div>'+
-    '<div class="fine">Штраф: '+p.name+(p.amt?(' ×'+p.amt+' '+(p.unit||'')):'')+'</div>'+
-    '<button class="warn" style="width:100%;margin-top:14px" onclick="closeModal()">Принял, отработаю 💪</button></div>';
-  m.classList.add('on');
-}
-function closeModal(){ document.getElementById('modal').classList.remove('on'); }
-function openWish(){
-  const s=Math.round(savedTotal()), cur=state.settings.cur;
-  const rows=WISH.slice().sort((a,b)=>a.p-b.p).map(it=>{
-    const ok=s>=it.p, left=it.p-s, pct=Math.min(100,Math.round(s/it.p*100));
-    return '<div class="wish '+(ok?'ok':'')+'"><span class="e">'+it.e+'</span>'+
-      '<span style="flex:1">'+it.n+'<div class="muted" style="font-size:11.5px">'+(ok?'можно взять 🎉':('ещё '+left+' '+cur))+'</div>'+
-      (ok?'':'<div class="bar" style="height:6px;margin-top:5px"><i style="width:'+pct+'%"></i></div>')+'</span>'+
-      '<b>'+it.p+' '+cur+'</b></div>';
-  }).join('');
-  const m=document.getElementById('modal');
-  m.innerHTML='<div class="sheet" style="text-align:left">'+
-    '<h2 style="text-align:center">💰 Сэкономлено: '+s+' '+cur+'</h2>'+
-    '<div class="muted" style="text-align:center;margin-bottom:10px">На эти деньги можно взять:</div>'+
-    rows+'<button class="ghost" style="width:100%;margin-top:14px" onclick="closeModal()">Закрыть</button></div>';
-  m.classList.add('on');
-}
-let cdTick=null, cdFired=false, cdInit=false;
-function startCd(){ clearInterval(cdTick); cdTick=setInterval(updCd,1000); updCd(); }
-function updCd(){
-  const el=document.getElementById('cdtime'); if(!el) return;
-  const ms=cooldownLeftMs(), total=cooldownMs(), bar=document.getElementById('cdbar');
-  if(ms<=0){
-    el.textContent='Можно 👍'; el.style.color='var(--acc)'; if(bar) bar.style.width='100%';
-    if(cdInit && !cdFired){ cdFired=true; try{ TG&&TG.HapticFeedback&&TG.HapticFeedback.notificationOccurred('success'); }catch(e){} toast('🔔 Пауза вышла — можно 🙂'); }
-    cdInit=true; return;
-  }
-  cdInit=true; cdFired=false;
-  el.style.color=''; const sec=Math.ceil(ms/1000);
-  el.textContent=pad(Math.floor(sec/60))+':'+pad(sec%60);
-  if(bar) bar.style.width=Math.max(0,Math.min(100,Math.round((1-ms/total)*100)))+'%';
-}
-function logCraving(intensity,note){
-  state.cravings.unshift({t:Date.now(),i:intensity,n:note||''});
-  if(state.cravings.length>200) state.cravings.length=200;
-  haptic('medium'); save(); render();
-}
-function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),2200); }
+/* ---------- темы ---------- */
+function applyTheme(){document.body.dataset.theme=state.settings.theme||'dark';
+ document.documentElement.style.setProperty('--acc',ACCENTS[state.settings.accent]||ACCENTS.green);}
 
-/* ---------- views ---------- */
-function render(){
-  const el=document.getElementById('app');
-  if(tab==='today') el.innerHTML=viewToday();
-  else if(tab==='plan') el.innerHTML=viewPlan();
-  else if(tab==='pen') el.innerHTML=viewPenalties();
-  else if(tab==='stats') el.innerHTML=viewStats();
-  else if(tab==='sos') el.innerHTML=viewSos();
-  else if(tab==='settings') el.innerHTML=viewSettings();
-  renderNav();
-  if(tab==='today') startCd(); else clearInterval(cdTick);
-}
-function renderNav(){
-  const items=[['today','📆','Сегодня'],['plan','📉','План'],['pen','⚖️','Штрафы'],['stats','📊','Стата'],['sos','🆘','SOS']];
-  document.getElementById('nav').innerHTML=items.map(([k,i,t])=>
-    `<a href="#" class="${tab===k?'on':''}" onclick="tab='${k}';haptic();render();return false"><span class="i">${i}</span>${t}</a>`).join('');
-}
-function header(title,sub){
-  return `<div class="row between" style="margin:4px 2px 14px">
-    <div><h1>${title}</h1><div class="sub">${sub}</div></div>
-    <button class="ghost sm" onclick="tab='settings';render()">⚙️</button></div>`;
-}
+/* ---------- звуки ---------- */
+let AC=null,SND=null;
+function stopSound(){if(SND){try{SND.src.stop()}catch(e){}try{SND.lfo&&SND.lfo.stop()}catch(e){}SND=null;}}
+function playSound(t){stopSound();if(!t||t==='none')return;
+ try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+ const buf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=buf.getChannelData(0);let last=0;
+ for(let i=0;i<d.length;i++){const w=Math.random()*2-1;last=(last+0.02*w)/1.02;d[i]=last*3;}
+ const src=AC.createBufferSource();src.buffer=buf;src.loop=true;
+ const f=AC.createBiquadFilter();const g=AC.createGain();
+ if(t==='rain'){f.type='highpass';f.frequency.value=1200;g.gain.value=.22;}
+ else if(t==='ocean'){f.type='lowpass';f.frequency.value=600;g.gain.value=.3;}
+ else{f.type='lowpass';f.frequency.value=380;g.gain.value=.32;}
+ src.connect(f);f.connect(g);g.connect(AC.destination);src.start();SND={src,g};
+ if(t==='ocean'){const lfo=AC.createOscillator(),la=AC.createGain();lfo.frequency.value=.09;la.gain.value=.16;lfo.connect(la);la.connect(g.gain);lfo.start();SND.lfo=lfo;}
+ }catch(e){}}
 
-function viewToday(){
-  const d=today(), s=smokedOn(d), L=currentLimit(), left=L-s;
-  const free=daysFree();
-  const pct=L>0?Math.min(100,Math.round(s/L*100)):100;
-  const over=s>L;
-  const ring=free>0
-    ? `<div class="hero"><div class="fire">🚭</div><div class="big">${free}<small> дн. без никотина</small></div>
-       <div class="muted" style="margin-top:8px">Ты молодец. Так держать 🦾</div></div>`
-    : `<div class="hero"><div class="muted">Сегодня выкурено</div>
-       <div class="big" style="color:${over?'var(--bad)':'var(--txt)'}">${s}<small> / ${L} стиков</small></div>
-       <div class="muted" style="margin-top:6px">${over?('Перебор на '+(-left)):(left===0?'Ровно лимит. Хватит на сегодня.':('Осталось '+left))}</div></div>
-       <div class="bar"><i style="width:${pct}%;background:${over?'var(--bad)':'var(--acc)'}"></i></div>`;
-  const last=lastTs(d);
-  return header('Не курю','День плана: '+(diffDays(state.startDate,d)+1))+`
-    <div class="card">${ring}</div>
-    <div class="card">
-      <div class="row between"><div><div class="muted">Следующий стик</div><div class="big" id="cdtime" style="font-size:30px">—</div></div>
-      <div class="muted" style="text-align:right">пауза<br><b style="color:var(--txt)">${cooldownMin()} мин</b></div></div>
-      <div class="bar"><i id="cdbar" style="width:0%"></i></div>
-    </div>
-    <div class="grid2">
-      <button onclick="addStick(1)">🚬 +1 стик</button>
-      <button class="ghost" onclick="addStick(-1)">↩︎ −1 (отмена)</button>
-    </div>
-    ${last?`<div class="muted" style="text-align:center;margin:10px">Последний: ${new Date(last).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</div>`:''}
-    <div class="grid3" style="margin-top:12px">
-      <div class="stat"><span>Ряд под лимитом</span><b>${streakUnderLimit()}<small style="font-size:12px;color:var(--dim)"> дн</small></b></div>
-      <div class="stat"><span>Средн./день (7)</span><b>${avg7().toFixed(1)}</b></div>
-      <div class="stat tap" onclick="openWish()"><span>Сэкономлено ▸</span><b>${Math.round(savedTotal())}<small style="font-size:12px;color:var(--dim)"> ${state.settings.cur}</small></b></div>
-    </div>
-    ${s>=L&&!over?`<div class="note">Лимит на сегодня закрыт. Пойдём попьём воды и подышим 💧</div>`:''}
-  `;
-}
+/* ---------- действия ---------- */
+function addStick(n){const d=today();state.log[d]=state.log[d]||[];
+ if(n<0){state.log[d].pop();haptic('light');save();render();return;}
+ const left=cooldownLeft(),L=currentLimit(),early=state.settings.penaltyOn&&(left>0||L===0);
+ state.log[d].push(Date.now());notifyServer();
+ if(early){const p=makePenalty(left,L);state.penalties.unshift(p);haptic('heavy');save();render();showPenalty(p,L);return;}
+ haptic('medium');save();render();
+ const s=smokedOn(d);if(s>L)toast('⚠️ Лимит превышен на '+(s-L));else if(s===L)toast('Всё, лимит на сегодня исчерпан 🚭');else toast('Записал 👍 следующий через '+cooldownMin()+' мин');}
+function randAmt(p){if(!p.max)return 0;return p.min+Math.floor(Math.random()*(Math.floor((p.max-p.min)/p.step)+1))*p.step;}
+function makePenalty(l,L){const p=PENALTY_PRESETS[Math.floor(Math.random()*PENALTY_PRESETS.length)];
+ return{id:Date.now()+''+Math.floor(Math.random()*1000),ts:Date.now(),k:p.k,name:p.n,unit:p.u,amt:randAmt(p),done:false,why:L===0?'стик в день «ноль»':('рано на '+(l>0?Math.ceil(l/60000):0)+' мин')};}
+function showPenalty(p,L){const m=document.getElementById('modal');
+ m.innerHTML='<div class="sheet"><div style="font-size:38px">⛔</div><h2>Рано!</h2>'+
+ '<div class="muted">'+(L===0?'Ты на нуле — стик это срыв.':'Выкурил раньше паузы ('+cooldownMin()+' мин).')+'</div>'+
+ '<div class="fine">Штраф: '+p.name+(p.amt?(' ×'+p.amt+' '+(p.unit||'')):'')+'</div>'+
+ '<div style="text-align:left;margin-top:14px"><div class="muted">Что было перед этим?</div><div class="chips">'+
+ TRIGGERS.map(t=>'<span class="chip" onclick="pickTrigger(this,\''+p.id+'\')">'+t+'</span>').join('')+'</div></div>'+
+ '<button class="warn wide" style="margin-top:14px" onclick="closeModal()">Принял, отработаю 💪</button></div>';
+ m.classList.add('on');}
+function pickTrigger(el,pid){const p=state.penalties.find(x=>x.id===pid);const t=el.textContent;
+ state.slips.unshift({t:Date.now(),trigger:t});if(p){p.trigger=t;}el.classList.add('on');save();toast('Записал триггер: '+t);}
+function closeModal(){document.getElementById('modal').classList.remove('on');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('on'),2200);}
+function notifyServer(){if(!API_BASE)return;const L=currentLimit(),s=smokedOn(today());
+ try{fetch(API_BASE+'/hit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+  initData:(TG&&TG.initData)||'',cooldownMin:cooldownMin(),limit:L,left:Math.max(0,L-s),over:Math.max(0,s-L),
+  quietFrom:state.settings.quietFrom,quietTo:state.settings.quietTo})}).catch(()=>{});}catch(e){}}
 
-function viewPlan(){
-  const cur=currentLimit(), start=state.plan.startLimit;
-  const prog=start>0?Math.round((start-cur)/Math.max(1,start)*100):100;
-  const nxt=nextStep(); const zd=zeroDate();
-  let rows='';
-  for(let i=0;i<=10;i++){
-    const d=new Date(); d.setDate(d.getDate()+i*state.plan.everyDays);
-    const ds=fmtD(d); const l=limitFor(ds);
-    rows+=`<div class="step ${i===0?'now':''}"><span>${i===0?'сейчас':(i===1?'через '+state.plan.everyDays+' дн':human(ds))}</span><span>${l} стик${l===1?'':(l>=2&&l<=4?'а':'ов')}</span></div>`;
-  }
-  return header('План снижения','Цель: ноль')+`
-    <div class="card">
-      <div class="row between"><div><div class="muted">Текущий лимит</div><div class="big" style="font-size:34px">${cur}<small> стиков/день</small></div></div>
-      <button class="ghost sm" onclick="tab='settings';render()">Изменить</button></div>
-      <div class="bar"><i style="width:${prog}%"></i></div>
-      <div class="muted" style="margin-top:6px">Прогресс к нулю: ${prog}%</div>
-    </div>
-    <div class="card">
-      <div class="row between"><span class="muted">Следующее снижение</span><b>${nxt?human(nxt.date)+' → '+nxt.limit+(nxt.limit===0?' (ноль 🚭)':''):'—'}</b></div>
-      ${zd?`<div class="row between" style="margin-top:8px"><span class="muted">Плановая дата «ноль»</span><b>${human(zd)}</b></div>`:''}
-    </div>
-    <div class="card"><div class="muted" style="margin-bottom:6px">График снижения</div>${rows}</div>
-    <div class="note">Правило: −${state.plan.step} стика каждые ${state.plan.everyDays} дн. Если стало тяжело — держи текущий лимит, но не поднимай. Дальше вниз.</div>
-  `;
-}
+/* ---------- чат с Оскаром ---------- */
+function chatContext(){return 'день плана '+(diffDays(state.startDate,today())+1)+', лимит сегодня '+currentLimit()+
+ ', выкурено '+smokedOn(today())+', без никотина дней '+daysFree()+', серия под лимитом '+streakUnder()+
+ ', всего сэкономлено '+Math.round(savedMoney())+state.settings.cur+', листьев в саду '+state.garden.leaves+'.';}
+let chatBusy=false;
+async function sendChat(){
+ const inp=document.getElementById('chatIn');const text=(inp.value||'').trim();if(!text||chatBusy)return;
+ inp.value='';state.chat.push({role:'user',content:text});save();render();chatBusy=true;render();
+ try{
+  const r=await fetch(API_BASE+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({initData:(TG&&TG.initData)||'',messages:state.chat.slice(-12),context:chatContext()})});
+  const j=await r.json();
+  if(j&&j.reply)state.chat.push({role:'assistant',content:j.reply});
+  else state.chat.push({role:'assistant',content:'Не смог ответить, попробуй ещё раз 🙏'});
+ }catch(e){state.chat.push({role:'assistant',content:'Нет связи с сервером. Проверь интернет 🙏'});}
+ chatBusy=false;save();render();
+ const c=document.getElementById('chatScroll');if(c)c.scrollTop=c.scrollHeight;}
 
-function viewStats(){
-  let bars='';
-  const arr=[];
-  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); arr.push(fmtD(d)); }
-  const max=Math.max(1,...arr.map(d=>Math.max(smokedOn(d),limitFor(d))));
-  arr.forEach(ds=>{
-    const s=smokedOn(ds), L=limitFor(ds); const h=Math.round(s/max*100); const over=s>L;
-    const wd=['вс','пн','вт','ср','чт','пт','сб'][parseD(ds).getDay()];
-    bars+=`<div class="col" title="${human(ds)}: ${s}/${L}"><i class="${s===0?'empty':(over?'over':'')}" style="height:${Math.max(3,h)}%"></i><span>${wd}</span></div>`;
-  });
-  const badges=[
-    [1,'🥉','1 день под лимитом',streakUnderLimit()>=1],
-    [3,'🥈','3 дня подряд',streakUnderLimit()>=3],
-    [7,'🥇','Неделя под лимитом',streakUnderLimit()>=7],
-    [14,'🏆','2 недели',streakUnderLimit()>=14],
-    [30,'💎','Месяц',streakUnderLimit()>=30],
-    [0,'🚭','1 день без никотина',daysFree()>=1],
-    [0,'🌟','Неделя без никотина',daysFree()>=7],
-  ];
-  return header('Статистика','Твой прогресс')+`
-    <div class="card"><div class="muted">Последние 7 дней (стики)</div><div class="chart">${bars}</div></div>
-    <div class="grid2">
-      <div class="stat"><span>Всего выкурено</span><b>${total()}</b></div>
-      <div class="stat"><span>Средн./день (7)</span><b>${avg7().toFixed(1)}</b></div>
-      <div class="stat"><span>За неделю потрачено</span><b>${Math.round(spent7())} ${state.settings.cur}</b></div>
-      <div class="stat tap" onclick="openWish()"><span>Сэкономлено всего ▸</span><b>${Math.round(savedTotal())} ${state.settings.cur}</b></div>
-    </div>
-    <div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:4px">Достижения</div>
-      ${badges.map(b=>`<div class="badge ${b[3]?'':'off'}"><span class="e">${b[1]}</span><span>${b[2]}</span></div>`).join('')}
-    </div>
-    <button class="ghost" style="width:100%" onclick="copyReport()">📋 Скопировать отчёт для Оскара</button>
-  `;
-}
+/* ---------- карточка-шеринг ---------- */
+function shareCard(){
+ const c=document.createElement('canvas');c.width=1080;c.height=1350;const x=c.getContext('2d');
+ const grd=x.createLinearGradient(0,0,0,1350);grd.addColorStop(0,'#0e1013');grd.addColorStop(1,'#16221b');
+ x.fillStyle=grd;x.fillRect(0,0,1080,1350);
+ x.fillStyle='#34d399';x.font='bold 150px sans-serif';x.textAlign='center';x.fillText('🌳',540,300);
+ x.fillStyle='#e8ebef';x.font='bold 64px sans-serif';x.fillText('Мой прогресс',540,420);
+ x.fillStyle='#34d399';x.font='bold 190px sans-serif';x.fillText(String(daysFree()||streakUnder()),540,650);
+ x.fillStyle='#8b949e';x.font='40px sans-serif';x.fillText(daysFree()>0?'дней без никотина':'дней под лимитом',540,720);
+ const rows=[['Выкурено стиков',total()],['Сэкономлено',Math.round(savedMoney())+' '+state.settings.cur],
+  ['Выиграно времени',hm(timeSavedMin())],['Не выкурено',avoided()],['Листьев в саду',state.garden.leaves]];
+ x.textAlign='left';let y=830;
+ rows.forEach(([k,v])=>{x.fillStyle='#8b949e';x.font='38px sans-serif';x.fillText(k,110,y);
+  x.fillStyle='#e8ebef';x.font='bold 44px sans-serif';x.textAlign='right';x.fillText(String(v),970,y);x.textAlign='left';y+=95;});
+ x.fillStyle='#33413a';x.font='30px sans-serif';x.textAlign='center';x.fillText('@protiv_cureniya_bot  🚭',540,1290);
+ c.toBlob(b=>{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='ne-kuryu.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),4000);});
+ toast('Картинка сохраняется 📸');}
 
-function viewSos(){
-  const cs=state.cravings.slice(0,6);
-  return header('Накрыло?','Дыши. Это пройдёт за 3–5 минут')+`
-    <div class="card">
-      <div class="muted">Таймер передышки — просто подожди, тяга уйдёт</div>
-      <div class="row center" style="margin:10px 0"><div class="timer" id="sosT">05:00</div></div>
-      <div class="grid2">
-        <button onclick="startSos(300)">▶️ 5 минут</button>
-        <button class="ghost" onclick="startSos(120)">⚡ 2 минуты</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="muted" style="margin-bottom:6px">Что сделать прямо сейчас</div>
-      <div class="badge"><span class="e">💧</span><span>Выпей воды, мелкими глотками</span></div>
-      <div class="badge"><span class="e">🌬</span><span>Дыхание 4-7-8: вдох 4с, задержка 7с, выдох 8с — 5 раз</span></div>
-      <div class="badge"><span class="e">🚶</span><span>Встань и пройдись 3 минуты</span></div>
-      <div class="badge"><span class="e">🍬</span><span>Жвачка / семечки / зубочистка — займи рот</span></div>
-      <div class="badge"><span class="e">📵</span><span>Убери айкос из поля зрения хотя бы на 10 минут</span></div>
-    </div>
-    <div class="grid2">
-      <button onclick="logCraving(2)">💪 Пережил тягу</button>
-      <button class="warn" onclick="logCraving(3)">😤 Было очень тяжело</button>
-    </div>
-    ${cs.length?`<div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:4px">Последние тяги</div>
-      ${cs.map(c=>`<div class="step"><span>${new Date(c.t).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span><span>${'🔥'.repeat(c.i)}</span></div>`).join('')}
-    </div>`:''}
-    <div class="note">Помни: пик ломки — первые 3 дня. Тяга длится 3–5 минут и всегда проходит. Тебе не надо решать «навсегда», надо продержаться 5 минут.</div>
-  `;
-}
+/* ---------- сад ---------- */
+function treeEmoji(){const it=SHOP.find(s=>s.id===state.garden.tree);return it?it.e:'🌳';}
+function treeSize(){const lv=Math.min(76,34+state.garden.leaves*0.35+streakUnder()*1.4);return Math.round(lv);}
+function buy(id){const it=SHOP.find(s=>s.id===id);if(!it)return;if(state.garden.bought[id]){equip(id);return;}
+ if(state.garden.leaves<it.p){toast('Не хватает листьев 🍃');return;}
+ state.garden.leaves-=it.p;state.garden.bought[id]=1;haptic('medium');save();equip(id);toast('Куплено! '+it.e);}
+function equip(id){const it=SHOP.find(s=>s.id===id);if(!it)return;
+ if(it.cat==='tree')state.garden.tree=id;
+ else if(it.cat==='bg')state.garden.bg=id;
+ else{const i=state.garden.decor.indexOf(id);if(i>=0)state.garden.decor.splice(i,1);else state.garden.decor.push(id);}
+ haptic();save();render();}
 
-function viewPenalties(){
-  const ps=state.penalties, undone=ps.filter(p=>!p.done);
-  const totals={};
-  undone.forEach(p=>{ const t=totals[p.k]||(totals[p.k]={n:p.name,u:p.unit,amt:0,cnt:0}); t.amt+=p.amt; t.cnt++; });
-  const cards=Object.values(totals).map(t=>`<div class="stat"><span>${t.n} (${t.cnt})</span><b>${t.amt?t.amt+' '+(t.u||''):'✓'}</b></div>`).join('');
-  return header('Штрафы','Наказания за ранние стики')+`
-    <div class="card"><div class="muted">Нужно отработать</div>
-      <div class="grid2" style="margin-top:8px">${cards||'<div class="muted">Пусто — красавчик 🦾</div>'}</div></div>
-    <div class="card"><div class="muted" style="margin-bottom:6px">Добавить вручную</div>
-      <div class="grid2">${PENALTY_PRESETS.map((p,i)=>`<button class="ghost sm" onclick="addManual(${i})">${p.n}</button>`).join('')}</div></div>
-    <div class="card"><div class="muted" style="margin-bottom:4px">История</div>
-      ${ps.length?ps.slice(0,40).map(p=>`<div class="badge ${p.done?'off':''}">
-        <input type="checkbox" ${p.done?'checked':''} onchange="togglePen('${p.id}')" style="width:auto">
-        <span style="flex:1">${p.name}${p.amt?(' ×'+p.amt+' '+(p.unit||'')):''}<div class="muted" style="font-size:11.5px">${new Date(p.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${p.why||''}</div></span>
-        <span style="color:var(--bad);padding:0 6px" onclick="delPen('${p.id}')">✕</span></div>`).join('')
-      :'<div class="muted">Пока пусто</div>'}
-    </div>`;
-}
-function togglePen(id){ const p=state.penalties.find(x=>x.id===id); if(p){ p.done=!p.done; haptic(); save(); render(); } }
-function delPen(id){ state.penalties=state.penalties.filter(x=>x.id!==id); save(); render(); }
-function addManual(i){ const p=PENALTY_PRESETS[i]; state.penalties.unshift({ id:Date.now()+''+Math.floor(Math.random()*1000), ts:Date.now(), k:p.k, name:p.n, unit:p.u, amt:randAmt(p), done:false, why:'вручную' }); haptic('medium'); save(); render(); toast('Штраф добавлен 💪'); }
-function viewSettings(){
-  const s=state;
-  return header('Настройки','Параметры плана')+`
-    <div class="card">
-      <label>Дата старта плана</label><input type="date" id="sd" value="${s.startDate}">
-      <label>Дата полного отказа («ноль», опц.)</label><input type="date" id="qd" value="${s.quitDate||''}">
-      <label>Стартовый лимит (стиков/день)</label><input type="number" id="sl" value="${s.plan.startLimit}">
-      <label>Снижать на (стиков)</label><input type="number" id="st" value="${s.plan.step}">
-      <label>Каждые (дней)</label><input type="number" id="ev" value="${s.plan.everyDays}">
-      <label>Цена 1 стика (${s.settings.cur})</label><input type="number" id="pp" value="${s.settings.pricePerStick}">
-      <label>Пауза между стиками</label>
-      <select id="cm"><option value="auto" ${s.settings.cooldownMode==='auto'?'selected':''}>Авто (активные часы ÷ лимит)</option><option value="manual" ${s.settings.cooldownMode==='manual'?'selected':''}>Вручную</option></select>
-      <label>Пауза, мин (если вручную)</label><input type="number" id="cmin" value="${s.settings.cooldownMin}">
-      <label>Активных часов в дне</label><input type="number" id="ah" value="${s.settings.activeHours}">
-      <label style="display:flex;align-items:center;gap:9px"><input type="checkbox" id="pon" ${s.settings.penaltyOn?'checked':''} style="width:auto"> Штрафы за ранний стик</label>
-      <button style="width:100%;margin-top:14px" onclick="saveSettings()">💾 Сохранить</button>
-    </div>
-    <div class="card">
-      <div class="muted">Данные хранятся в облаке Telegram (CloudStorage) — доступны только тебе, синхронизируются между устройствами.</div>
-      <button class="ghost" style="width:100%;margin-top:10px" onclick="if(confirm('Сбросить все данные?')){state=JSON.parse(JSON.stringify(DEFAULT));save();tab='today';render()}">🗑 Сбросить всё</button>
-      <div class="muted" style="text-align:center;margin-top:12px;font-size:11px">${APP_VER}</div>
-    </div>
-    <button class="ghost" style="width:100%" onclick="tab='today';render()">← Назад</button>
-  `;
-}
-function saveSettings(){
-  const g=id=>document.getElementById(id).value;
-  state.startDate=g('sd')||today();
-  state.quitDate=g('qd')||null;
-  state.plan.startLimit=Math.max(0,+g('sl')||0);
-  state.plan.step=Math.max(1,+g('st')||1);
-  state.plan.everyDays=Math.max(1,+g('ev')||7);
-  state.settings.pricePerStick=Math.max(0,+g('pp')||0);
-  state.settings.cooldownMode=g('cm')||'auto';
-  state.settings.cooldownMin=Math.max(1,+g('cmin')||50);
-  state.settings.activeHours=Math.max(1,+g('ah')||16);
-  state.settings.penaltyOn=!!document.getElementById('pon').checked;
-  state.manualLimit={}; save(); haptic('medium'); toast('Сохранено ✓'); tab='today'; render();
-}
-function copyReport(){
-  const d=today();
-  const txt=`🚭 Отчёт трекера (${human(d)})
-Лимит: ${currentLimit()}, сегодня: ${smokedOn(d)}
-День плана: ${diffDays(state.startDate,d)+1}
-Ряд под лимитом: ${streakUnderLimit()} дн
-Без никотина: ${daysFree()} дн
-Всего: ${total()}, средн/день(7): ${avg7().toFixed(1)}
-Сэкономлено: ${Math.round(savedTotal())} ${state.settings.cur}`;
-  navigator.clipboard?.writeText(txt).then(()=>toast('Отчёт скопирован 📋'),()=>toast('Не вышло скопировать'));
-}
-function startSos(sec){
-  const el=document.getElementById('sosT'); if(!el) return;
-  clearInterval(sosTimer); let t=sec; haptic('medium');
-  const tick=()=>{ el.textContent=pad(Math.floor(t/60))+':'+pad(t%60);
-    if(t<=0){ clearInterval(sosTimer); el.textContent='✅ Ты пережил!'; logCraving(2); return; } t--; };
-  tick(); sosTimer=setInterval(tick,1000);
-}
+/* ---------- представления ---------- */
+function render(){const el=document.getElementById('app');
+ if(tab==='today')el.innerHTML=viewToday();
+ else if(tab==='garden')el.innerHTML=viewGarden();
+ else if(tab==='chat')el.innerHTML=viewChat();
+ else if(tab==='stats')el.innerHTML=viewStats();
+ else if(tab==='sos')el.innerHTML=viewSos();
+ else if(tab==='plan')el.innerHTML=viewPlan();
+ else if(tab==='pen')el.innerHTML=viewPen();
+ else if(tab==='more')el.innerHTML=viewMore();
+ else if(tab==='settings')el.innerHTML=viewSettings();
+ renderNav();if(tab==='today')startCd();else{clearInterval(cdTick);stopSound();}
+ if(tab==='chat'){const c=document.getElementById('chatScroll');if(c)c.scrollTop=c.scrollHeight;}}
+function renderNav(){const it=[['today','📆','Сегодня'],['garden','🌳','Сад'],['chat','💬','Оскар'],['stats','📊','Стата'],['sos','🆘','SOS']];
+ document.getElementById('nav').innerHTML=it.map(([k,i,t])=>'<a href="#" class="'+(tab===k?'on':'')+'" onclick="tab=\''+k+'\';haptic();render();return false"><span class="i">'+i+'</span>'+t+'</a>').join('');}
+function head(t,s){return '<div class="row between" style="margin:4px 2px 14px"><div><h1>'+t+'</h1><div class="sub">'+s+'</div></div>'+
+ '<button class="ghost sm" onclick="tab=\'more\';render()">⋯</button></div>';}
+
+function viewToday(){const d=today(),s=smokedOn(d),L=currentLimit(),left=L-s,free=daysFree();
+ const pct=L>0?Math.min(100,Math.round(s/L*100)):100,over=s>L;
+ const ring=free>0?('<div class="hero"><div class="fire">🚭</div><div class="big">'+free+'<small> дн. без никотина</small></div></div>')
+  :('<div class="hero"><div class="muted">Сегодня выкурено</div><div class="big" style="color:'+(over?'var(--bad)':'var(--txt)')+'">'+s+'<small> / '+L+' стиков</small></div>'+
+    '<div class="muted" style="margin-top:6px">'+(over?('Перебор на '+(-left)):(left===0?'Ровно лимит. Хватит на сегодня.':('Осталось '+left)))+'</div></div>'+
+    '<div class="bar"><i style="width:'+pct+'%;background:'+(over?'var(--bad)':'var(--acc)')+'"></i></div>');
+ const last=lastTs(d);
+ return head('Не курю','День плана: '+(diffDays(state.startDate,d)+1))+
+
+ '<div class="card">'+ring+'</div>'+
+ '<div class="card"><div class="row between"><div><div class="muted">Следующий стик</div><div class="big" id="cdtime" style="font-size:30px">—</div></div>'+
+ '<div class="muted" style="text-align:right">пауза<br><b style="color:var(--txt)">'+cooldownMin()+' мин</b></div></div><div class="bar"><i id="cdbar" style="width:0%"></i></div></div>'+
+ '<div class="grid2"><button onclick="addStick(1)">🚬 +1 стик</button><button class="ghost" onclick="addStick(-1)">↩︎ −1 (отмена)</button></div>'+
+ (last?'<div class="muted" style="text-align:center;margin:10px">Последний: '+new Date(last).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</div>':'')+
+ '<div class="grid3" style="margin-top:12px">'+
+ '<div class="stat"><span>Ряд под лимитом</span><b>'+streakUnder()+'<small style="font-size:12px;color:var(--dim)"> дн</small></b></div>'+
+ '<div class="stat"><span>Выиграно времени</span><b>'+hm(timeSavedMin())+'</b></div>'+
+ '<div class="stat tap" onclick="openWish()"><span>Сэкономлено ▸</span><b>'+Math.round(savedMoney())+'<small style="font-size:12px;color:var(--dim)"> '+state.settings.cur+'</small></b></div></div>'+
+ '<div class="muted" style="text-align:center;margin-top:10px">🍃 '+state.garden.leaves+' листьев в саду</div>';}
+
+function viewGarden(){const g=state.garden;
+ const dec=g.decor.map((id,i)=>{const it=SHOP.find(s=>s.id===id);if(!it)return'';
+  const pos=[['12%','76%'],['84%','78%'],['16%','62%'],['80%','60%'],['30%','22%'],['68%','26%']][i%6];
+  return '<span class="decor" style="left:'+pos[0]+';top:'+pos[1]+'">'+it.e+'</span>';}).join('');
+ const scene='<div class="scene" data-bg="'+g.bg+'">'+dec+
+  '<div class="tree" style="font-size:'+treeSize()+'px">'+treeEmoji()+'</div><div class="grass">🌿🌿🌿</div>'+
+  '<div class="leaves" style="margin-top:6px;background:rgba(0,0,0,.25);color:#fff;padding:3px 10px;border-radius:20px">🍃 '+g.leaves+'</div></div>';
+ const cats=[['tree','Деревья'],['decor','Украшения'],['bg','Фон']];
+ let shop='';
+ cats.forEach(([c,name])=>{shop+='<div class="muted" style="margin:12px 0 2px">'+name+'</div>';
+  SHOP.filter(s=>s.cat===c).forEach(s=>{const owned=!!g.bought[s.id];
+   const equipped=(c==='tree'&&g.tree===s.id)||(c==='bg'&&g.bg===s.id)||(c==='decor'&&g.decor.includes(s.id));
+   shop+='<div class="shopitem"><span class="e">'+s.e+'</span><span style="flex:1">'+s.n+
+    '<div class="muted" style="font-size:11.5px">'+(owned?(equipped?'используется':'куплено'):('🍃 '+s.p))+'</div></span>'+
+    (owned?('<button class="ghost sm" onclick="equip(\''+s.id+'\')">'+(equipped?'убрать':'надеть')+'</button>')
+          :('<button class="sm" onclick="buy(\''+s.id+'\')">Купить</button>'))+'</div>';});});
+ return head('Сад','Листья капают за дни под лимитом')+
+  '<div class="card">'+scene+'</div>'+
+  '<div class="note">🍃 <b>Как капают листья:</b> +5 за день под лимитом, ещё +5 за день без стиков, +2 за пережитую тягу, +2 за выполненный штраф. Трать на деревья, украшения и фоны — сад растёт вместе с тобой.</div>'+
+  '<div class="card">'+shop+'</div>';}
+
+function viewChat(){
+ const msgs=state.chat.length?state.chat:[{role:'assistant',content:'Привет 👋 Я Оскар. Тут можно выговориться: тяга, срыв, усталость, «зачем я вообще это начал» — пиши как есть, без фильтра. Я рядом.'}];
+ const bubbles=msgs.map(m=>'<div class="bub '+(m.role==='user'?'me':'bot')+'">'+
+   (m.content||'').replace(/</g,'&lt;')+'</div>').join('')+(chatBusy?'<div class="bub bot typing">Оскар печатает…</div>':'');
+ return head('Оскар','Поддержка без осуждения')+
+  '<div class="card" style="padding:12px"><div class="chat" id="chatScroll" style="max-height:52vh;overflow:auto">'+bubbles+'</div></div>'+
+  '<div class="chatinput"><textarea id="chatIn" placeholder="Напиши, что чувствуешь…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><button onclick="sendChat()">➤</button></div>'+
+  '<div style="height:70px"></div>';}
+
+function viewStats(){let bars='';const arr=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);arr.push(fmtD(d));}
+ const max=Math.max(1,...arr.map(d=>Math.max(smokedOn(d),limitFor(d))));
+ arr.forEach(ds=>{const s=smokedOn(ds),L=limitFor(ds);const wd=['вс','пн','вт','ср','чт','пт','сб'][parseD(ds).getDay()];
+  bars+='<div class="col" title="'+human(ds)+': '+s+'/'+L+'"><i class="'+(s===0?'empty':(s>L?'over':''))+'" style="height:'+Math.max(3,Math.round(s/max*100))+'%"></i><span>'+wd+'</span></div>';});
+ const trig={};state.slips.forEach(s=>trig[s.trigger]=(trig[s.trigger]||0)+1);
+ const helps={};state.cravings.forEach(c=>{if(c.help)helps[c.help]=(helps[c.help]||0)+1;});
+ const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>k+' ×'+v).join(' · ')||'пока пусто';
+ const badges=[[1,'🥉','1 день под лимитом',streakUnder()>=1],[3,'🥈','3 дня подряд',streakUnder()>=3],[7,'🥇','Неделя',streakUnder()>=7],[14,'🏆','2 недели',streakUnder()>=14],[30,'💎','Месяц',streakUnder()>=30],[0,'🚭','1 день без никотина',daysFree()>=1],[0,'🌟','Неделя без никотина',daysFree()>=7]];
+ return head('Статистика','Твой прогресс')+
+  '<div class="card"><div class="muted">Последние 7 дней (стики)</div><div class="chart">'+bars+'</div></div>'+
+  '<div class="grid2"><div class="stat"><span>Всего выкурено</span><b>'+total()+'</b></div>'+
+  '<div class="stat"><span>Средн./день (7)</span><b>'+avg7().toFixed(1)+'</b></div>'+
+  '<div class="stat"><span>Не выкурено</span><b>'+avoided()+'</b></div>'+
+  '<div class="stat"><span>Выиграно времени</span><b>'+hm(timeSavedMin())+'</b></div>'+
+  '<div class="stat tap" onclick="openWish()"><span>Сэкономлено ▸</span><b>'+Math.round(savedMoney())+' '+state.settings.cur+'</b></div>'+
+  '<div class="stat"><span>За неделю</span><b>'+Math.round(spent7())+' '+state.settings.cur+'</b></div></div>'+
+  '<div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:4px">🎯 Триггеры срывов</div>'+top(trig)+
+  '<div class="muted" style="margin:10px 0 4px">💪 Что помогает от тяги</div>'+top(helps)+'</div>'+
+  '<div class="card"><div class="muted" style="margin-bottom:4px">Достижения</div>'+
+  badges.map(b=>'<div class="badge '+(b[3]?'':'off')+'"><span class="e">'+b[1]+'</span><span>'+b[2]+'</span></div>').join('')+'</div>'+
+  '<div class="grid2"><button class="ghost" onclick="shareCard()">📸 Картинка прогресса</button>'+
+  '<button class="ghost" onclick="copyReport()">📋 Отчёт текстом</button></div>';}
+
+function viewSos(){const cs=state.cravings.slice(0,6);
+ const sounds=[['none','🔇 Тишина'],['rain','🌧 Дождь'],['ocean','🌊 Океан'],['brown','🎚 Шум']];
+ return head('Накрыло?','Дыши. Это пройдёт за 3–5 минут')+
+  '<div class="card"><div class="muted">Таймер передышки — просто подожди, тяга уйдёт</div>'+
+  '<div class="row center" style="margin:10px 0"><div class="timer" id="sosT">05:00</div></div>'+
+  '<div class="muted">Звук для медитации</div><div class="chips" id="sndRow">'+
+  sounds.map(s=>'<span class="chip '+(state.settings.sound===s[0]?'on':'')+'" onclick="setSound(\''+s[0]+'\')">'+s[1]+'</span>').join('')+'</div>'+
+  '<div class="grid2" style="margin-top:12px"><button onclick="startSos(300)">▶️ 5 минут</button><button class="ghost" onclick="startSos(120)">⚡ 2 минуты</button></div></div>'+
+  '<div class="card"><div class="muted" style="margin-bottom:6px">Что сделать прямо сейчас</div>'+
+  '<div class="badge"><span class="e">💧</span><span>Выпей воды мелкими глотками</span></div>'+
+  '<div class="badge"><span class="e">🌬</span><span>Дыхание 4-7-8: вдох 4с, задержка 7с, выдох 8с — 5 раз</span></div>'+
+  '<div class="badge"><span class="e">🚶</span><span>Встань и пройдись 3 минуты</span></div>'+
+  '<div class="badge"><span class="e">🍬</span><span>Жвачка / семечки — займи рот</span></div>'+
+  '<div class="badge"><span class="e">📵</span><span>Убери айкос из поля зрения на 10 минут</span></div></div>'+
+  '<div class="grid2"><button onclick="askHelp()">💪 Пережил тягу</button><button class="warn" onclick="askHelp()">😤 Было тяжело</button></div>'+
+  (cs.length?'<div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:4px">Последние тяги</div>'+
+   cs.map(c=>'<div class="step"><span>'+new Date(c.t).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span><span>'+'🔥'.repeat(c.i)+(c.help?' · '+c.help:'')+'</span></div>').join('')+'</div>':'')+
+  '<div class="note">Пик ломки — первые 3 дня. Тяга длится 3–5 минут и всегда проходит. Тебе не надо решать «навсегда» — надо продержаться 5 минут.</div>';}
+function setSound(s){state.settings.sound=s;save();playSound(s);render();}
+function askHelp(){const m=document.getElementById('modal');
+ m.innerHTML='<div class="sheet"><h2>Что помогло?</h2><div class="muted">Отметь — и в статистике будет видно, что реально работает</div>'+
+ '<div class="chips" style="justify-content:center">'+HELPERS.map(h=>'<span class="chip" onclick="logCraving(this,\''+h+'\')">'+h+'</span>').join('')+'</div>'+
+ '<button class="ghost wide" style="margin-top:14px" onclick="closeModal()">Пропустить</button></div>';m.classList.add('on');}
+function logCraving(el,h){state.cravings.unshift({t:Date.now(),i:2,help:h});state.garden.leaves+=2;
+ if(el)el.classList.add('on');haptic('medium');save();closeModal();render();toast('+2 🍃 и записал: '+h);}
+function startSos(sec){const el=document.getElementById('sosT');if(!el)return;clearInterval(sosTimer);let t=sec;haptic('medium');
+ playSound(state.settings.sound);
+ const tick=()=>{el.textContent=pad(Math.floor(t/60))+':'+pad(t%60);
+  if(t<=0){clearInterval(sosTimer);el.textContent='✅ Пережил!';stopSound();logCraving(null,'Потерпел');return;}t--;};
+ tick();sosTimer=setInterval(tick,1000);}
+
+function viewPlan(){const cur=currentLimit(),start=state.plan.startLimit,prog=start>0?Math.round((start-cur)/Math.max(1,start)*100):100;
+ const nxt=nextStep(),zd=zeroDate();let rows='';
+ for(let i=0;i<=10;i++){const d=new Date();d.setDate(d.getDate()+i*state.plan.everyDays);const ds=fmtD(d),l=limitFor(ds);
+  rows+='<div class="step '+(i===0?'now':'')+'"><span>'+(i===0?'сейчас':(i===1?'через '+state.plan.everyDays+' дн':human(ds)))+'</span><span>'+l+' стик'+(l===1?'':(l>=2&&l<=4?'а':'ов'))+'</span></div>';}
+ return head('План снижения','Цель: ноль')+
+  '<div class="card"><div class="row between"><div><div class="muted">Текущий лимит</div><div class="big" style="font-size:34px">'+cur+'<small> стиков/день</small></div></div><button class="ghost sm" onclick="tab=\'settings\';render()">Изменить</button></div>'+
+  '<div class="bar"><i style="width:'+prog+'%"></i></div><div class="muted" style="margin-top:6px">Прогресс к нулю: '+prog+'%</div></div>'+
+  '<div class="card"><div class="row between"><span class="muted">Следующее снижение</span><b>'+(nxt?human(nxt.date)+' → '+nxt.limit+(nxt.limit===0?' (ноль 🚭)':''):'—')+'</b></div>'+
+  (zd?'<div class="row between" style="margin-top:8px"><span class="muted">Плановая дата «ноль»</span><b>'+human(zd)+'</b></div>':'')+'</div>'+
+  '<div class="card"><div class="muted" style="margin-bottom:6px">График снижения</div>'+rows+'</div>';}
+
+function viewPen(){const ps=state.penalties,undone=ps.filter(p=>!p.done),tot={};
+ undone.forEach(p=>{const t=tot[p.k]||(tot[p.k]={n:p.name,u:p.unit,amt:0,cnt:0});t.amt+=p.amt;t.cnt++;});
+ const cards=Object.values(tot).map(t=>'<div class="stat"><span>'+t.n+' ('+t.cnt+')</span><b>'+(t.amt?(t.amt+' '+(t.u||'')):'✓')+'</b></div>').join('');
+ return head('Штрафы','Наказания за ранние стики')+
+  '<div class="card"><div class="muted">Нужно отработать</div><div class="grid2" style="margin-top:8px">'+(cards||'<div class="muted">Пусто — красавчик 🦾</div>')+'</div></div>'+
+  '<div class="card"><div class="muted" style="margin-bottom:6px">Добавить вручную</div><div class="grid2">'+PENALTY_PRESETS.map((p,i)=>'<button class="ghost sm" onclick="addManual('+i+')">'+p.n+'</button>').join('')+'</div></div>'+
+  '<div class="card"><div class="muted" style="margin-bottom:4px">История</div>'+
+  (ps.length?ps.slice(0,40).map(p=>'<div class="badge '+(p.done?'off':'')+'"><input type="checkbox" '+(p.done?'checked':'')+' onchange="togglePen(\''+p.id+'\')" style="width:auto">'+
+   '<span style="flex:1">'+p.name+(p.amt?(' ×'+p.amt+' '+(p.unit||'')):'')+'<div class="muted" style="font-size:11.5px">'+new Date(p.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' · '+(p.why||'')+(p.trigger?' · '+p.trigger:'')+'</div></span>'+
+   '<span style="color:var(--bad);padding:0 6px" onclick="delPen(\''+p.id+'\')">✕</span></div>').join(''):'<div class="muted">Пока пусто</div>')+'</div>';}
+function togglePen(id){const p=state.penalties.find(x=>x.id===id);if(p){if(!p.done)state.garden.leaves+=2;p.done=!p.done;haptic();save();render();}}
+function delPen(id){state.penalties=state.penalties.filter(x=>x.id!==id);save();render();}
+function addManual(i){const p=PENALTY_PRESETS[i];state.penalties.unshift({id:Date.now()+''+Math.floor(Math.random()*1000),ts:Date.now(),k:p.k,name:p.n,unit:p.u,amt:randAmt(p),done:false,why:'вручную'});haptic('medium');save();render();toast('Штраф добавлен 💪');}
+
+function viewMore(){const rows=[['plan','📉','План снижения'],['pen','⚖️','Штрафы'],['settings','⚙️','Настройки']];
+ return head('Ещё','')+ '<div class="card">'+rows.map(r=>'<div class="badge" onclick="tab=\''+r[0]+'\';render()"><span class="e">'+r[1]+'</span><span style="flex:1">'+r[2]+'</span><span class="muted">›</span></div>').join('')+
+ '<div class="badge" onclick="shareCard()"><span class="e">📸</span><span style="flex:1">Картинка прогресса</span><span class="muted">›</span></div>'+
+ '<div class="badge" onclick="exportData()"><span class="e">⬇️</span><span style="flex:1">Экспорт данных</span><span class="muted">›</span></div>'+
+ '<div class="badge" onclick="installHelp()"><span class="e">📌</span><span style="flex:1">Ярлык на главный экран</span><span class="muted">›</span></div></div>';}
+function exportData(){const b=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='ne-kuryu-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Бэкап сохраняется ⬇️');}
+function installHelp(){const m=document.getElementById('modal');
+ m.innerHTML='<div class="sheet"><h2>Ярлык на главный экран</h2><div class="muted" style="text-align:left;line-height:1.5">В Telegram открой приложение, затем меню <b>⋯ (вверху справа окна приложения)</b> → <b>«Добавить на главный экран»</b>. Появится иконка — будет открываться в один тап.</div><button class="ghost wide" style="margin-top:14px" onclick="closeModal()">Понял</button></div>';m.classList.add('on');}
+
+function viewSettings(){const s=state;
+ return head('Настройки','Параметры')+
+  '<div class="card"><label>Дата старта плана</label><input type="date" id="sd" value="'+s.startDate+'">'+
+  '<label>Дата полного отказа («ноль», опц.)</label><input type="date" id="qd" value="'+(s.quitDate||'')+'">'+
+  '<label>Стартовый лимит (стиков/день)</label><input type="number" id="sl" value="'+s.plan.startLimit+'">'+
+  '<label>Снижать на (стиков)</label><input type="number" id="st" value="'+s.plan.step+'">'+
+  '<label>Каждые (дней)</label><input type="number" id="ev" value="'+s.plan.everyDays+'">'+
+  '<label>Цена 1 стика ('+s.settings.cur+')</label><input type="number" id="pp" value="'+s.settings.pricePerStick+'">'+
+  '<label>Пауза между стиками</label><select id="cm"><option value="auto" '+(s.settings.cooldownMode==='auto'?'selected':'')+'>Авто (часы ÷ лимит)</option><option value="manual" '+(s.settings.cooldownMode==='manual'?'selected':'')+'>Вручную</option></select>'+
+  '<label>Пауза, мин (если вручную)</label><input type="number" id="cmin" value="'+s.settings.cooldownMin+'">'+
+  '<label>Активных часов в дне</label><input type="number" id="ah" value="'+s.settings.activeHours+'">'+
+  '<label style="display:flex;align-items:center;gap:9px"><input type="checkbox" id="pon" '+(s.settings.penaltyOn?'checked':'')+' style="width:auto"> Штрафы за ранний стик</label></div>'+
+  '<div class="card"><div class="muted" style="margin-bottom:6px">🎨 Тема</div>'+
+  '<div class="chips">'+[['dark','Тёмная'],['mid','Мягкая'],['light','Светлая'],['auto','Как в Telegram']].map(t=>'<span class="chip '+(s.settings.theme===t[0]?'on':'')+'" onclick="setTheme(\''+t[0]+'\')">'+t[1]+'</span>').join('')+'</div>'+
+  '<div class="muted" style="margin:12px 0 6px">Акцент</div><div class="chips">'+
+  Object.keys(ACCENTS).map(a=>'<span class="chip '+(s.settings.accent===a?'on':'')+'" style="border-color:'+ACCENTS[a]+'" onclick="setAccent(\''+a+'\')">'+a+'</span>').join('')+'</div></div>'+
+  '<div class="card"><label>Тихие часы: с</label><input type="number" id="qf" value="'+s.settings.quietFrom+'" min="0" max="23">'+
+  '<label>по</label><input type="number" id="qt" value="'+s.settings.quietTo+'" min="0" max="23">'+
+  '<div class="muted" style="margin-top:6px">В это время бот не пишет (ночью не будит).</div></div>'+
+  '<button class="wide" onclick="saveSettings()">💾 Сохранить</button>'+
+  '<div class="card" style="margin-top:12px"><button class="ghost wide" onclick="if(confirm(\'Сбросить все данные?\')){state=JSON.parse(JSON.stringify(DEFAULT));applyTheme();save();tab=\'today\';render()}">🗑 Сбросить всё</button>'+
+  '<div class="muted" style="text-align:center;margin-top:12px;font-size:11px">'+APP_VER+'</div></div>';}
+function setTheme(t){state.settings.theme=t;if(t==='auto'&&TG&&TG.colorScheme)state.settings.theme=TG.colorScheme==='light'?'light':'dark';applyTheme();save();render();}
+function setAccent(a){state.settings.accent=a;applyTheme();save();render();}
+function saveSettings(){const g=id=>document.getElementById(id).value;
+ state.startDate=g('sd')||today();state.quitDate=g('qd')||null;
+ state.plan.startLimit=Math.max(0,+g('sl')||0);state.plan.step=Math.max(1,+g('st')||1);state.plan.everyDays=Math.max(1,+g('ev')||7);
+ state.settings.pricePerStick=Math.max(0,+g('pp')||0);state.settings.cooldownMode=g('cm')||'auto';
+ state.settings.cooldownMin=Math.max(1,+g('cmin')||50);state.settings.activeHours=Math.max(1,+g('ah')||16);
+ state.settings.penaltyOn=!!document.getElementById('pon').checked;
+ state.settings.quietFrom=((+g('qf')||23)+24)%24;state.settings.quietTo=((+g('qt')||8)+24)%24;
+ state.manualLimit={};save();haptic('medium');toast('Сохранено ✓');tab='today';render();}
+
+function openWish(){const s=Math.round(savedMoney()),cur=state.settings.cur;
+ const rows=WISH.slice().sort((a,b)=>a.p-b.p).map(it=>{const ok=s>=it.p,left=it.p-s,pct=Math.min(100,Math.round(s/it.p*100));
+  return '<div class="wish '+(ok?'ok':'')+'"><span class="e">'+it.e+'</span><span style="flex:1">'+it.n+'<div class="muted" style="font-size:11.5px">'+(ok?'можно взять 🎉':('ещё '+left+' '+cur))+'</div>'+
+   (ok?'':'<div class="bar" style="height:6px;margin-top:5px"><i style="width:'+pct+'%"></i></div>')+'</span><b>'+it.p+' '+cur+'</b></div>';}).join('');
+ const m=document.getElementById('modal');
+ m.innerHTML='<div class="sheet" style="text-align:left"><h2 style="text-align:center">💰 Сэкономлено: '+s+' '+cur+'</h2>'+
+  '<div class="muted" style="text-align:center;margin-bottom:10px">На эти деньги можно взять:</div>'+rows+
+  '<button class="ghost wide" style="margin-top:14px" onclick="closeModal()">Закрыть</button></div>';m.classList.add('on');}
+function copyReport(){const d=today();
+ const txt='🚭 Отчёт ('+human(d)+')\nЛимит: '+currentLimit()+', сегодня: '+smokedOn(d)+
+  '\nДень плана: '+(diffDays(state.startDate,d)+1)+'\nРяд под лимитом: '+streakUnder()+' дн\nБез никотина: '+daysFree()+
+  ' дн\nВсего: '+total()+', не выкурено: '+avoided()+'\nВыиграно времени: '+hm(timeSavedMin())+
+  '\nСэкономлено: '+Math.round(savedMoney())+' '+state.settings.cur+'\nЛистьев: '+state.garden.leaves;
+ navigator.clipboard?navigator.clipboard.writeText(txt).then(()=>toast('Отчёт скопирован 📋'),()=>toast('Не вышло')):toast('Не вышло');}
+
+/* часы-таймер */
+function startCd(){clearInterval(cdTick);cdTick=setInterval(updCd,1000);updCd();}
+function updCd(){const el=document.getElementById('cdtime');if(!el)return;
+ const ms=cooldownLeft(),total=cooldownMs(),bar=document.getElementById('cdbar');
+ if(ms<=0){el.textContent='Можно 👍';el.style.color='var(--acc)';if(bar)bar.style.width='100%';
+  if(cdInit&&!cdFired){cdFired=true;try{TG&&TG.HapticFeedback&&TG.HapticFeedback.notificationOccurred('success');}catch(e){}toast('🔔 Пауза вышла — можно 🙂');}cdInit=true;return;}
+ cdInit=true;cdFired=false;el.style.color='';const sec=Math.ceil(ms/1000);
+ el.textContent=pad(Math.floor(sec/60))+':'+pad(sec%60);
+ if(bar)bar.style.width=Math.max(0,Math.min(100,Math.round((1-ms/total)*100)))+'%';}
+
 window.tab=tab;
-
-load(()=>{ render(); });
-
-/* база API для уведомлений (берём из api.json — можно менять без пересборки) */
-let API_BASE='';
-(function(){ try{ fetch('api.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{ if(d&&d.base) API_BASE=String(d.base).replace(/\/$/,''); }).catch(()=>{}); }catch(e){} })();
-
-/* само-обновление: если на сервере лежит version.json с другим id — перезагружаемся на новый URL */
-(function(){
-  try{
-    fetch('version.json?t='+Date.now(),{cache:'no-store'})
-      .then(r=>r.json()).then(d=>{
-        const id=d&&d.id; if(!id||id===APP_ID) return;
-        if(location.search.indexOf(id)>=0) return;
-        if(sessionStorage.getItem('nk_upd')===id) return;
-        sessionStorage.setItem('nk_upd',id);
-        location.replace(location.pathname+'?id='+encodeURIComponent(id)+location.hash);
-      }).catch(()=>{});
-  }catch(e){}
-})();
+load(()=>{accrue();if(state.settings.theme==='auto'&&TG&&TG.colorScheme)state.settings.theme=TG.colorScheme==='light'?'light':'dark';applyTheme();render();});
+(function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{const id=d&&d.id;if(!id||id===APP_ID)return;
+ if(location.search.indexOf(id)>=0)return;if(sessionStorage.getItem('nk_upd')===id)return;
+ sessionStorage.setItem('nk_upd',id);location.replace(location.pathname+'?id='+encodeURIComponent(id)+location.hash);}).catch(()=>{});}catch(e){}})();
 </script>
 </body>
 </html>
