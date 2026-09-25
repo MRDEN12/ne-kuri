@@ -136,7 +136,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925213853';
+const APP_ID='20260925214444';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -239,7 +239,7 @@ function applyTheme(){document.body.dataset.theme=state.settings.theme||'dark';
  document.documentElement.style.setProperty('--acc',ACCENTS[state.settings.accent]||ACCENTS.green);}
 
 /* ---------- звуки (реальные записи, Mixkit free license) ---------- */
-const SOUNDS=[['none','🔇 Тишина'],['rain','🌧 Дождь'],['ocean','🌊 Океан'],['forest','🌲 Лес'],['night','🌙 Ночь'],['wind','💨 Ветер']];
+const SOUNDS=[['none','🔇 Тишина'],['rain','🌧 Дождь'],['ocean','🌊 Океан'],['forest','🌲 Лес'],['night','🌙 Ночь'],['wind','💨 Ветер'],['fire','🔥 Костёр']];
 let SND=null;
 function stopSound(){if(SND){try{SND.pause();SND.currentTime=0;}catch(e){}SND=null;}}
 function playSound(t){stopSound();if(!t||t==='none')return;
