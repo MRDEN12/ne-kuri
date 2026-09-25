@@ -62,7 +62,7 @@ label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
 .toast.on{opacity:1}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:120;overflow:auto}
 .modal.on{display:flex}
-.sheet{width:100%;background:var(--card);border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));text-align:center}
+.sheet{width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--card);border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));text-align:center}
 .fine{background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.45);color:var(--bad);border-radius:12px;padding:13px;margin-top:12px;font-size:19px;font-weight:700}
 .wish{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;opacity:.5}
 .wish:last-of-type{border:none}.wish.ok{opacity:1}.wish .e{font-size:20px;width:24px;text-align:center}
@@ -136,7 +136,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925135222';
+const APP_ID='20260925135607';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -599,7 +599,7 @@ function viewWish(){const s=Math.round(savedMoney()),cur=state.settings.cur;
    (done?'':'<div class="bar" style="height:6px;margin-top:5px"><i style="width:'+pct+'%"></i></div>')+'</span>'+
    '<b>'+it.p+' '+cur+'</b><span style="cursor:pointer" onclick="wishEdit('+idx+')">✏️</span>'+
    '<span style="cursor:pointer;color:var(--bad)" onclick="wishDel('+idx+')">✕</span></div>';}).join('');
- return head('Вишлист','На что копишь сэкономленные')+
+ return pgHead('Вишлист','На что копишь сэкономленные')+
   '<div class="card"><div class="row between"><span class="muted">Сэкономлено</span><b>'+s+' '+cur+'</b></div>'+
   '<button class="wide" style="margin-top:12px" onclick="wishEdit(-1)">＋ Добавить желание</button></div>'+
   '<div class="card">'+(rows||'<div class="muted">Пусто — добавь, на что копишь 🎯</div>')+'</div>'+
