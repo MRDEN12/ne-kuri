@@ -69,12 +69,24 @@ label{font-size:12.5px;color:var(--dim);display:block;margin:10px 0 5px}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#e8ebef;color:#111;
   padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
 .toast.on{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:120}
+.modal.on{display:flex}
+.sheet{width:100%;background:var(--card);border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));text-align:center;animation:up .2s ease}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.sheet h2{font-size:21px;margin:6px 0}
+.fine{background:#2a1414;border:1px solid #572222;color:#ffb4b4;border-radius:12px;padding:13px;margin-top:12px;font-size:19px;font-weight:700}
+.wish{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;opacity:.5}
+.wish:last-of-type{border:none}
+.wish.ok{opacity:1}
+.wish .e{font-size:20px;width:24px;text-align:center}
+.stat.tap{cursor:pointer}
 </style>
 </head>
 <body>
 <div class="wrap" id="app"></div>
 <div class="nav" id="nav"></div>
 <div class="toast" id="toast"></div>
+<div class="modal" id="modal"></div>
 
 <script>
 const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -89,6 +101,27 @@ const parseD=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[
 const diffDays=(a,b)=>Math.round((parseD(b)-parseD(a))/DAY);
 const human=s=>{const a=s.split('-');return a[2]+'.'+a[1]+'.'+a[0];};
 
+const PENALTY_PRESETS=[
+  {k:'pushup',n:'Отжимания',u:'раз',min:10,max:20,step:2},
+  {k:'squat',n:'Приседания',u:'раз',min:15,max:30,step:5},
+  {k:'plank',n:'Планка',u:'сек',min:30,max:90,step:10},
+  {k:'cold',n:'Холодный душ',u:'мин',min:2,max:5,step:1},
+  {k:'water',n:'Два стакана воды',u:'',min:0,max:0,step:1}
+];
+const WISH=[
+  {e:'☕',n:'Кофе в кофейне',p:900},
+  {e:'🍜',n:'Обед в кафе',p:4000},
+  {e:'🎬',n:'Кино на двоих',p:5000},
+  {e:'🧵',n:'Катушка PLA (1 кг)',p:6000},
+  {e:'🌶️',n:'Катушка PETG-CF',p:12000},
+  {e:'🍣',n:'Ужин в ресторане',p:18000},
+  {e:'🏋️',n:'Месяц спортзала',p:20000},
+  {e:'🔩',n:'Катушка PA6-CF',p:25000},
+  {e:'🎧',n:'Хорошие наушники',p:60000},
+  {e:'📱',n:'Новый смартфон',p:250000},
+  {e:'🖨️',n:'Ещё один P1S',p:450000},
+  {e:'💻',n:'Игровой ноутбук',p:900000}
+];
 const DEFAULT={
   v:1,
   startDate: today(),
@@ -97,7 +130,8 @@ const DEFAULT={
   manualLimit:{},
   log:{},
   cravings:[],
-  settings:{pricePerStick:38, cur:'₸', oldDaily:90}
+  penalties:[],
+  settings:{pricePerStick:38, cur:'₸', oldDaily:90, activeHours:16, cooldownMode:'auto', cooldownMin:50, penaltyOn:true}
 };
 let state=JSON.parse(JSON.stringify(DEFAULT));
 let tab='today';
@@ -138,6 +172,15 @@ function limitFor(dateStr){
 }
 const smokedOn=d=>(state.log[d]||[]).length;
 const lastTs=d=>{const a=state.log[d]||[];return a.length?a[a.length-1]:null;};
+function lastAnyStickTs(){ let m=0; for(const k in state.log){ for(const t of state.log[k]) if(t>m) m=t; } return m||0; }
+function cooldownMin(){
+  const s=state.settings, L=currentLimit();
+  if(L<=0) return Math.max(1,(+s.activeHours||16)*60);
+  if(s.cooldownMode==='manual') return Math.max(1,+s.cooldownMin||1);
+  return Math.max(1, Math.round((+s.activeHours||16)*60/L));
+}
+const cooldownMs=()=>cooldownMin()*60000;
+function cooldownLeftMs(){ const t=lastAnyStickTs(); return t? Math.max(0, t+cooldownMs()-Date.now()) : 0; }
 function currentLimit(){ return limitFor(today()); }
 function nextStep(){ // {date, limit} when limit drops next
   const todayL=currentLimit();
@@ -189,13 +232,65 @@ function savedTotal(){
 /* ---------- actions ---------- */
 function addStick(n){
   const d=today(); state.log[d]=state.log[d]||[];
-  if(n>0){ state.log[d].push(Date.now()); }
-  else { state.log[d].pop(); }
-  haptic(n>0?'medium':'light'); save(); render();
-  if(n>0){ const L=currentLimit(); const s=smokedOn(d);
-    if(s>L) toast('⚠️ Лимит превышен на '+(s-L));
-    else if(s===L) toast('Всё, лимит на сегодня исчерпан 🚭');
+  if(n<0){ state.log[d].pop(); haptic('light'); save(); render(); return; }
+  const left=cooldownLeftMs();
+  const L=currentLimit();
+  const early = state.settings.penaltyOn && (left>0 || L===0);
+  state.log[d].push(Date.now());
+  if(early){
+    const p=makePenalty(left,L);
+    state.penalties.unshift(p);
+    haptic('heavy'); save(); render(); showPenaltyModal(p,L);
+    return;
   }
+  haptic('medium'); save(); render();
+  const s=smokedOn(d);
+  if(s>L) toast('⚠️ Лимит превышен на '+(s-L));
+  else if(s===L) toast('Всё, лимит на сегодня исчерпан 🚭');
+  else toast('Записал 👍 следующий через '+cooldownMin()+' мин');
+}
+function randAmt(p){ if(!p.max) return 0; const n=Math.floor((p.max-p.min)/p.step)+1; return p.min+Math.floor(Math.random()*n)*p.step; }
+function makePenalty(leftMs,L){
+  const p=PENALTY_PRESETS[Math.floor(Math.random()*PENALTY_PRESETS.length)];
+  const late=leftMs>0?Math.ceil(leftMs/60000):0;
+  return { id:Date.now()+''+Math.floor(Math.random()*1000), ts:Date.now(), k:p.k, name:p.n, unit:p.u,
+           amt:randAmt(p), done:false, why: L===0 ? 'стик в день «ноль»' : ('рано на '+late+' мин') };
+}
+function showPenaltyModal(p,L){
+  const m=document.getElementById('modal');
+  m.innerHTML='<div class="sheet"><div style="font-size:38px">⛔</div>'+
+    '<h2>Рано!</h2>'+
+    '<div class="muted">'+(L===0?'Ты на нуле — стик это срыв.':'Выкурил раньше паузы ('+cooldownMin()+' мин).')+'</div>'+
+    '<div class="fine">Штраф: '+p.name+(p.amt?(' ×'+p.amt+' '+(p.unit||'')):'')+'</div>'+
+    '<button class="warn" style="width:100%;margin-top:14px" onclick="closeModal()">Принял, отработаю 💪</button></div>';
+  m.classList.add('on');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('on'); }
+function openWish(){
+  const s=Math.round(savedTotal()), cur=state.settings.cur;
+  const rows=WISH.slice().sort((a,b)=>a.p-b.p).map(it=>{
+    const ok=s>=it.p, left=it.p-s, pct=Math.min(100,Math.round(s/it.p*100));
+    return '<div class="wish '+(ok?'ok':'')+'"><span class="e">'+it.e+'</span>'+
+      '<span style="flex:1">'+it.n+'<div class="muted" style="font-size:11.5px">'+(ok?'можно взять 🎉':('ещё '+left+' '+cur))+'</div>'+
+      (ok?'':'<div class="bar" style="height:6px;margin-top:5px"><i style="width:'+pct+'%"></i></div>')+'</span>'+
+      '<b>'+it.p+' '+cur+'</b></div>';
+  }).join('');
+  const m=document.getElementById('modal');
+  m.innerHTML='<div class="sheet" style="text-align:left">'+
+    '<h2 style="text-align:center">💰 Сэкономлено: '+s+' '+cur+'</h2>'+
+    '<div class="muted" style="text-align:center;margin-bottom:10px">На эти деньги можно взять:</div>'+
+    rows+'<button class="ghost" style="width:100%;margin-top:14px" onclick="closeModal()">Закрыть</button></div>';
+  m.classList.add('on');
+}
+let cdTick=null;
+function startCd(){ clearInterval(cdTick); cdTick=setInterval(updCd,1000); updCd(); }
+function updCd(){
+  const el=document.getElementById('cdtime'); if(!el) return;
+  const ms=cooldownLeftMs(), total=cooldownMs(), bar=document.getElementById('cdbar');
+  if(ms<=0){ el.textContent='Можно 👍'; el.style.color='var(--acc)'; if(bar) bar.style.width='100%'; return; }
+  el.style.color=''; const sec=Math.ceil(ms/1000);
+  el.textContent=pad(Math.floor(sec/60))+':'+pad(sec%60);
+  if(bar) bar.style.width=Math.max(0,Math.min(100,Math.round((1-ms/total)*100)))+'%';
 }
 function logCraving(intensity,note){
   state.cravings.unshift({t:Date.now(),i:intensity,n:note||''});
@@ -209,12 +304,15 @@ function render(){
   const el=document.getElementById('app');
   if(tab==='today') el.innerHTML=viewToday();
   else if(tab==='plan') el.innerHTML=viewPlan();
+  else if(tab==='pen') el.innerHTML=viewPenalties();
   else if(tab==='stats') el.innerHTML=viewStats();
   else if(tab==='sos') el.innerHTML=viewSos();
+  else if(tab==='settings') el.innerHTML=viewSettings();
   renderNav();
+  if(tab==='today') startCd(); else clearInterval(cdTick);
 }
 function renderNav(){
-  const items=[['today','📆','Сегодня'],['plan','📉','План'],['stats','📊','Стата'],['sos','🆘','SOS']];
+  const items=[['today','📆','Сегодня'],['plan','📉','План'],['pen','⚖️','Штрафы'],['stats','📊','Стата'],['sos','🆘','SOS']];
   document.getElementById('nav').innerHTML=items.map(([k,i,t])=>
     `<a href="#" class="${tab===k?'on':''}" onclick="tab='${k}';haptic();render();return false"><span class="i">${i}</span>${t}</a>`).join('');
 }
@@ -239,6 +337,11 @@ function viewToday(){
   const last=lastTs(d);
   return header('Не курю','День плана: '+(diffDays(state.startDate,d)+1))+`
     <div class="card">${ring}</div>
+    <div class="card">
+      <div class="row between"><div><div class="muted">Следующий стик</div><div class="big" id="cdtime" style="font-size:30px">—</div></div>
+      <div class="muted" style="text-align:right">пауза<br><b style="color:var(--txt)">${cooldownMin()} мин</b></div></div>
+      <div class="bar"><i id="cdbar" style="width:0%"></i></div>
+    </div>
     <div class="grid2">
       <button onclick="addStick(1)">🚬 +1 стик</button>
       <button class="ghost" onclick="addStick(-1)">↩︎ −1 (отмена)</button>
@@ -247,7 +350,7 @@ function viewToday(){
     <div class="grid3" style="margin-top:12px">
       <div class="stat"><span>Ряд под лимитом</span><b>${streakUnderLimit()}<small style="font-size:12px;color:var(--dim)"> дн</small></b></div>
       <div class="stat"><span>Средн./день (7)</span><b>${avg7().toFixed(1)}</b></div>
-      <div class="stat"><span>Сэкономлено</span><b>${Math.round(savedTotal())}<small style="font-size:12px;color:var(--dim)"> ${state.settings.cur}</small></b></div>
+      <div class="stat tap" onclick="openWish()"><span>Сэкономлено ▸</span><b>${Math.round(savedTotal())}<small style="font-size:12px;color:var(--dim)"> ${state.settings.cur}</small></b></div>
     </div>
     ${s>=L&&!over?`<div class="note">Лимит на сегодня закрыт. Пойдём попьём воды и подышим 💧</div>`:''}
   `;
@@ -304,7 +407,7 @@ function viewStats(){
       <div class="stat"><span>Всего выкурено</span><b>${total()}</b></div>
       <div class="stat"><span>Средн./день (7)</span><b>${avg7().toFixed(1)}</b></div>
       <div class="stat"><span>За неделю потрачено</span><b>${Math.round(spent7())} ${state.settings.cur}</b></div>
-      <div class="stat"><span>Сэкономлено всего</span><b>${Math.round(savedTotal())} ${state.settings.cur}</b></div>
+      <div class="stat tap" onclick="openWish()"><span>Сэкономлено всего ▸</span><b>${Math.round(savedTotal())} ${state.settings.cur}</b></div>
     </div>
     <div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:4px">Достижения</div>
       ${badges.map(b=>`<div class="badge ${b[3]?'':'off'}"><span class="e">${b[1]}</span><span>${b[2]}</span></div>`).join('')}
@@ -343,6 +446,27 @@ function viewSos(){
   `;
 }
 
+function viewPenalties(){
+  const ps=state.penalties, undone=ps.filter(p=>!p.done);
+  const totals={};
+  undone.forEach(p=>{ const t=totals[p.k]||(totals[p.k]={n:p.name,u:p.unit,amt:0,cnt:0}); t.amt+=p.amt; t.cnt++; });
+  const cards=Object.values(totals).map(t=>`<div class="stat"><span>${t.n} (${t.cnt})</span><b>${t.amt?t.amt+' '+(t.u||''):'✓'}</b></div>`).join('');
+  return header('Штрафы','Наказания за ранние стики')+`
+    <div class="card"><div class="muted">Нужно отработать</div>
+      <div class="grid2" style="margin-top:8px">${cards||'<div class="muted">Пусто — красавчик 🦾</div>'}</div></div>
+    <div class="card"><div class="muted" style="margin-bottom:6px">Добавить вручную</div>
+      <div class="grid2">${PENALTY_PRESETS.map((p,i)=>`<button class="ghost sm" onclick="addManual(${i})">${p.n}</button>`).join('')}</div></div>
+    <div class="card"><div class="muted" style="margin-bottom:4px">История</div>
+      ${ps.length?ps.slice(0,40).map(p=>`<div class="badge ${p.done?'off':''}">
+        <input type="checkbox" ${p.done?'checked':''} onchange="togglePen('${p.id}')" style="width:auto">
+        <span style="flex:1">${p.name}${p.amt?(' ×'+p.amt+' '+(p.unit||'')):''}<div class="muted" style="font-size:11.5px">${new Date(p.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${p.why||''}</div></span>
+        <span style="color:var(--bad);padding:0 6px" onclick="delPen('${p.id}')">✕</span></div>`).join('')
+      :'<div class="muted">Пока пусто</div>'}
+    </div>`;
+}
+function togglePen(id){ const p=state.penalties.find(x=>x.id===id); if(p){ p.done=!p.done; haptic(); save(); render(); } }
+function delPen(id){ state.penalties=state.penalties.filter(x=>x.id!==id); save(); render(); }
+function addManual(i){ const p=PENALTY_PRESETS[i]; state.penalties.unshift({ id:Date.now()+''+Math.floor(Math.random()*1000), ts:Date.now(), k:p.k, name:p.n, unit:p.u, amt:randAmt(p), done:false, why:'вручную' }); haptic('medium'); save(); render(); toast('Штраф добавлен 💪'); }
 function viewSettings(){
   const s=state;
   return header('Настройки','Параметры плана')+`
@@ -353,6 +477,11 @@ function viewSettings(){
       <label>Снижать на (стиков)</label><input type="number" id="st" value="${s.plan.step}">
       <label>Каждые (дней)</label><input type="number" id="ev" value="${s.plan.everyDays}">
       <label>Цена 1 стика (${s.settings.cur})</label><input type="number" id="pp" value="${s.settings.pricePerStick}">
+      <label>Пауза между стиками</label>
+      <select id="cm"><option value="auto" ${s.settings.cooldownMode==='auto'?'selected':''}>Авто (активные часы ÷ лимит)</option><option value="manual" ${s.settings.cooldownMode==='manual'?'selected':''}>Вручную</option></select>
+      <label>Пауза, мин (если вручную)</label><input type="number" id="cmin" value="${s.settings.cooldownMin}">
+      <label>Активных часов в дне</label><input type="number" id="ah" value="${s.settings.activeHours}">
+      <label style="display:flex;align-items:center;gap:9px"><input type="checkbox" id="pon" ${s.settings.penaltyOn?'checked':''} style="width:auto"> Штрафы за ранний стик</label>
       <button style="width:100%;margin-top:14px" onclick="saveSettings()">💾 Сохранить</button>
     </div>
     <div class="card">
@@ -370,6 +499,10 @@ function saveSettings(){
   state.plan.step=Math.max(1,+g('st')||1);
   state.plan.everyDays=Math.max(1,+g('ev')||7);
   state.settings.pricePerStick=Math.max(0,+g('pp')||0);
+  state.settings.cooldownMode=g('cm')||'auto';
+  state.settings.cooldownMin=Math.max(1,+g('cmin')||50);
+  state.settings.activeHours=Math.max(1,+g('ah')||16);
+  state.settings.penaltyOn=!!document.getElementById('pon').checked;
   state.manualLimit={}; save(); haptic('medium'); toast('Сохранено ✓'); tab='today'; render();
 }
 function copyReport(){
