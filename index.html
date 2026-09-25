@@ -104,7 +104,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925102159';
+const APP_ID='20260925102453';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -315,7 +315,7 @@ function render(){const el=document.getElementById('app');
  if(tab==='chat'){const c=document.getElementById('chatScroll');if(c)c.scrollTop=c.scrollHeight;}}
 function renderNav(){const it=[['today','📆','Сегодня'],['garden','🌳','Сад'],['chat','💬','Оскар'],['stats','📊','Стата'],['sos','🆘','SOS']];
  document.getElementById('nav').innerHTML=it.map(([k,i,t])=>'<a href="#" class="'+(tab===k?'on':'')+'" onclick="tab=\''+k+'\';haptic();render();return false"><span class="i">'+i+'</span>'+t+'</a>').join('');}
-function head(t,s){return '<div class="row between" style="margin:4px 2px 14px"><div><h1>'+t+'</h1><div class="sub">'+s+'</div></div>'+
+function pgHead(t,s){return '<div class="row between" style="margin:4px 2px 14px"><div><h1>'+t+'</h1><div class="sub">'+s+'</div></div>'+
  '<button class="ghost sm" onclick="tab=\'more\';render()">⋯</button></div>';}
 
 function viewToday(){const d=today(),s=smokedOn(d),L=currentLimit(),left=L-s,free=daysFree();
@@ -325,7 +325,7 @@ function viewToday(){const d=today(),s=smokedOn(d),L=currentLimit(),left=L-s,fre
     '<div class="muted" style="margin-top:6px">'+(over?('Перебор на '+(-left)):(left===0?'Ровно лимит. Хватит на сегодня.':('Осталось '+left)))+'</div></div>'+
     '<div class="bar"><i style="width:'+pct+'%;background:'+(over?'var(--bad)':'var(--acc)')+'"></i></div>');
  const last=lastTs(d);
- return head('Не курю','День плана: '+(diffDays(state.startDate,d)+1))+
+ return pgHead('Не курю','День плана: '+(diffDays(state.startDate,d)+1))+
 
  '<div class="card">'+ring+'</div>'+
  '<div class="card"><div class="row between"><div><div class="muted">Следующий стик</div><div class="big" id="cdtime" style="font-size:30px">—</div></div>'+
@@ -354,7 +354,7 @@ function viewGarden(){const g=state.garden;
     '<div class="muted" style="font-size:11.5px">'+(owned?(equipped?'используется':'куплено'):('🍃 '+s.p))+'</div></span>'+
     (owned?('<button class="ghost sm" onclick="equip(\''+s.id+'\')">'+(equipped?'убрать':'надеть')+'</button>')
           :('<button class="sm" onclick="buy(\''+s.id+'\')">Купить</button>'))+'</div>';});});
- return head('Сад','Листья капают за дни под лимитом')+
+ return pgHead('Сад','Листья капают за дни под лимитом')+
   '<div class="card">'+scene+'</div>'+
   '<div class="note">🍃 <b>Как капают листья:</b> +5 за день под лимитом, ещё +5 за день без стиков, +2 за пережитую тягу, +2 за выполненный штраф. Трать на деревья, украшения и фоны — сад растёт вместе с тобой.</div>'+
   '<div class="card">'+shop+'</div>';}
@@ -363,7 +363,7 @@ function viewChat(){
  const msgs=state.chat.length?state.chat:[{role:'assistant',content:'Привет 👋 Я Оскар. Тут можно выговориться: тяга, срыв, усталость, «зачем я вообще это начал» — пиши как есть, без фильтра. Я рядом.'}];
  const bubbles=msgs.map(m=>'<div class="bub '+(m.role==='user'?'me':'bot')+'">'+
    (m.content||'').replace(/</g,'&lt;')+'</div>').join('')+(chatBusy?'<div class="bub bot typing">Оскар печатает…</div>':'');
- return head('Оскар','Поддержка без осуждения')+
+ return pgHead('Оскар','Поддержка без осуждения')+
   '<div class="card" style="padding:12px"><div class="chat" id="chatScroll" style="max-height:52vh;overflow:auto">'+bubbles+'</div></div>'+
   '<div class="chatinput"><textarea id="chatIn" placeholder="Напиши, что чувствуешь…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><button onclick="sendChat()">➤</button></div>'+
   '<div style="height:70px"></div>';}
@@ -376,7 +376,7 @@ function viewStats(){let bars='';const arr=[];for(let i=6;i>=0;i--){const d=new 
  const helps={};state.cravings.forEach(c=>{if(c.help)helps[c.help]=(helps[c.help]||0)+1;});
  const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>k+' ×'+v).join(' · ')||'пока пусто';
  const badges=[[1,'🥉','1 день под лимитом',streakUnder()>=1],[3,'🥈','3 дня подряд',streakUnder()>=3],[7,'🥇','Неделя',streakUnder()>=7],[14,'🏆','2 недели',streakUnder()>=14],[30,'💎','Месяц',streakUnder()>=30],[0,'🚭','1 день без никотина',daysFree()>=1],[0,'🌟','Неделя без никотина',daysFree()>=7]];
- return head('Статистика','Твой прогресс')+
+ return pgHead('Статистика','Твой прогресс')+
   '<div class="card"><div class="muted">Последние 7 дней (стики)</div><div class="chart">'+bars+'</div></div>'+
   '<div class="grid2"><div class="stat"><span>Всего выкурено</span><b>'+total()+'</b></div>'+
   '<div class="stat"><span>Средн./день (7)</span><b>'+avg7().toFixed(1)+'</b></div>'+
@@ -394,7 +394,7 @@ function viewStats(){let bars='';const arr=[];for(let i=6;i>=0;i--){const d=new 
 
 function viewSos(){const cs=state.cravings.slice(0,6);
  const sounds=[['none','🔇 Тишина'],['rain','🌧 Дождь'],['ocean','🌊 Океан'],['brown','🎚 Шум']];
- return head('Накрыло?','Дыши. Это пройдёт за 3–5 минут')+
+ return pgHead('Накрыло?','Дыши. Это пройдёт за 3–5 минут')+
   '<div class="card"><div class="muted">Таймер передышки — просто подожди, тяга уйдёт</div>'+
   '<div class="row center" style="margin:10px 0"><div class="timer" id="sosT">05:00</div></div>'+
   '<div class="muted">Звук для медитации</div><div class="chips" id="sndRow">'+
@@ -427,7 +427,7 @@ function viewPlan(){const cur=currentLimit(),start=state.plan.startLimit,prog=st
  const nxt=nextStep(),zd=zeroDate();let rows='';
  for(let i=0;i<=10;i++){const d=new Date();d.setDate(d.getDate()+i*state.plan.everyDays);const ds=fmtD(d),l=limitFor(ds);
   rows+='<div class="step '+(i===0?'now':'')+'"><span>'+(i===0?'сейчас':(i===1?'через '+state.plan.everyDays+' дн':human(ds)))+'</span><span>'+l+' стик'+(l===1?'':(l>=2&&l<=4?'а':'ов'))+'</span></div>';}
- return head('План снижения','Цель: ноль')+
+ return pgHead('План снижения','Цель: ноль')+
   '<div class="card"><div class="row between"><div><div class="muted">Текущий лимит</div><div class="big" style="font-size:34px">'+cur+'<small> стиков/день</small></div></div><button class="ghost sm" onclick="tab=\'settings\';render()">Изменить</button></div>'+
   '<div class="bar"><i style="width:'+prog+'%"></i></div><div class="muted" style="margin-top:6px">Прогресс к нулю: '+prog+'%</div></div>'+
   '<div class="card"><div class="row between"><span class="muted">Следующее снижение</span><b>'+(nxt?human(nxt.date)+' → '+nxt.limit+(nxt.limit===0?' (ноль 🚭)':''):'—')+'</b></div>'+
@@ -437,7 +437,7 @@ function viewPlan(){const cur=currentLimit(),start=state.plan.startLimit,prog=st
 function viewPen(){const ps=state.penalties,undone=ps.filter(p=>!p.done),tot={};
  undone.forEach(p=>{const t=tot[p.k]||(tot[p.k]={n:p.name,u:p.unit,amt:0,cnt:0});t.amt+=p.amt;t.cnt++;});
  const cards=Object.values(tot).map(t=>'<div class="stat"><span>'+t.n+' ('+t.cnt+')</span><b>'+(t.amt?(t.amt+' '+(t.u||'')):'✓')+'</b></div>').join('');
- return head('Штрафы','Наказания за ранние стики')+
+ return pgHead('Штрафы','Наказания за ранние стики')+
   '<div class="card"><div class="muted">Нужно отработать</div><div class="grid2" style="margin-top:8px">'+(cards||'<div class="muted">Пусто — красавчик 🦾</div>')+'</div></div>'+
   '<div class="card"><div class="muted" style="margin-bottom:6px">Добавить вручную</div><div class="grid2">'+PENALTY_PRESETS.map((p,i)=>'<button class="ghost sm" onclick="addManual('+i+')">'+p.n+'</button>').join('')+'</div></div>'+
   '<div class="card"><div class="muted" style="margin-bottom:4px">История</div>'+
@@ -449,7 +449,7 @@ function delPen(id){state.penalties=state.penalties.filter(x=>x.id!==id);save();
 function addManual(i){const p=PENALTY_PRESETS[i];state.penalties.unshift({id:Date.now()+''+Math.floor(Math.random()*1000),ts:Date.now(),k:p.k,name:p.n,unit:p.u,amt:randAmt(p),done:false,why:'вручную'});haptic('medium');save();render();toast('Штраф добавлен 💪');}
 
 function viewMore(){const rows=[['plan','📉','План снижения'],['pen','⚖️','Штрафы'],['challenge','🤝','Дружеский вызов'],['settings','⚙️','Настройки']];
- return head('Ещё','')+ '<div class="card">'+rows.map(r=>'<div class="badge" onclick="tab=\''+r[0]+'\';render()"><span class="e">'+r[1]+'</span><span style="flex:1">'+r[2]+'</span><span class="muted">›</span></div>').join('')+
+ return pgHead('Ещё','')+ '<div class="card">'+rows.map(r=>'<div class="badge" onclick="tab=\''+r[0]+'\';render()"><span class="e">'+r[1]+'</span><span style="flex:1">'+r[2]+'</span><span class="muted">›</span></div>').join('')+
  '<div class="badge" onclick="shareCard()"><span class="e">📸</span><span style="flex:1">Картинка прогресса</span><span class="muted">›</span></div>'+
  '<div class="badge" onclick="exportData()"><span class="e">⬇️</span><span style="flex:1">Экспорт данных</span><span class="muted">›</span></div>'+
  '<div class="badge" onclick="installHelp()"><span class="e">📌</span><span style="flex:1">Ярлык на главный экран</span><span class="muted">›</span></div></div>';}
@@ -458,7 +458,7 @@ function installHelp(){const m=document.getElementById('modal');
  m.innerHTML='<div class="sheet"><h2>Ярлык на главный экран</h2><div class="muted" style="text-align:left;line-height:1.5">В Telegram открой приложение, затем меню <b>⋯ (вверху справа окна приложения)</b> → <b>«Добавить на главный экран»</b>. Появится иконка — будет открываться в один тап.</div><button class="ghost wide" style="margin-top:14px" onclick="closeModal()">Понял</button></div>';m.classList.add('on');}
 
 function viewSettings(){const s=state;
- return head('Настройки','Параметры')+
+ return pgHead('Настройки','Параметры')+
   '<div class="card"><label>Дата старта плана</label><input type="date" id="sd" value="'+s.startDate+'">'+
   '<label>Дата полного отказа («ноль», опц.)</label><input type="date" id="qd" value="'+(s.quitDate||'')+'">'+
   '<label>Стартовый лимит (стиков/день)</label><input type="number" id="sl" value="'+s.plan.startLimit+'">'+
@@ -506,7 +506,7 @@ function chLeave(){state.challenge={};save();render();toast('Вышел из в�
 function chInvite(){const c=(state.challenge||{}).code||'';const txt='Брось курить со мной 💪 Открой приложение @protiv_cureniya_bot → меню «⋯» → «Дружеский вызов» → введи код: '+c;
  navigator.clipboard?navigator.clipboard.writeText(txt).then(()=>toast('Приглашение скопировано 📋'),()=>toast('Не вышло')):toast('Не вышло');}
 function viewChallenge(){const ch=state.challenge||{};
- if(!ch.code){return head('Вызов','Брось курить на спор с другом')+
+ if(!ch.code){return pgHead('Вызов','Брось курить на спор с другом')+
   '<div class="card"><div class="muted">Создай вызов и отправь код другу — кто дольше продержится и больше сэкономит.</div>'+
   '<button class="wide" style="margin-top:12px" onclick="chCreate()">🤝 Создать вызов</button></div>'+
   '<div class="card"><label>Или войди по коду друга</label><div class="row"><input id="chCode" placeholder="КОД" style="text-transform:uppercase"><button onclick="chJoin()">Войти</button></div></div>'+
@@ -516,7 +516,7 @@ function viewChallenge(){const ch=state.challenge||{};
   return '<div class="badge"><span class="e">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'•')+'</span><span style="flex:1">'+(m.name||'Друг')+(m.me?' (ты)':'')+
    '<div class="muted" style="font-size:11.5px">ряд: '+(s.streak||0)+' · без никотина: '+(s.free||0)+' · не выкурено: '+(s.avoided||0)+'</div></span>'+
    '<b>'+(s.saved||0)+' '+state.settings.cur+'</b></div>';}).join(''):'<div class="muted">Пока никого. Отправь код другу.</div>';
- return head('Вызов '+ch.code,'Кто дольше продержится')+
+ return pgHead('Вызов '+ch.code,'Кто дольше продержится')+
   '<div class="card"><div class="muted" style="margin-bottom:4px">Таблица</div>'+rows+'</div>'+
   '<div class="grid2"><button class="ghost" onclick="chSync()">🔄 Обновить</button><button class="ghost" onclick="chInvite()">📋 Пригласить</button></div>'+
   '<button class="ghost wide" style="margin-top:10px" onclick="chLeave()">Выйти из вызова</button>'+
