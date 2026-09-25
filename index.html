@@ -93,6 +93,7 @@ const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : 
 if (TG){ try{ TG.ready(); TG.expand(); TG.setHeaderColor && TG.setHeaderColor('#0e1013'); TG.enableClosingConfirmation && TG.enableClosingConfirmation(); }catch(e){} }
 const haptic=(t)=>{ try{ TG && TG.HapticFeedback && TG.HapticFeedback.impactOccurred(t||'light'); }catch(e){} };
 
+const APP_VER='v2 · 25.09.2026';
 const DAY=86400000;
 const pad=n=>String(n).padStart(2,'0');
 const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -487,6 +488,7 @@ function viewSettings(){
     <div class="card">
       <div class="muted">Данные хранятся в облаке Telegram (CloudStorage) — доступны только тебе, синхронизируются между устройствами.</div>
       <button class="ghost" style="width:100%;margin-top:10px" onclick="if(confirm('Сбросить все данные?')){state=JSON.parse(JSON.stringify(DEFAULT));save();tab='today';render()}">🗑 Сбросить всё</button>
+      <div class="muted" style="text-align:center;margin-top:12px;font-size:11px">${APP_VER}</div>
     </div>
     <button class="ghost" style="width:100%" onclick="tab='today';render()">← Назад</button>
   `;
