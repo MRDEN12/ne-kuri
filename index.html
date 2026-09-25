@@ -137,7 +137,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925214629';
+const APP_ID='20260925220806';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -241,12 +241,18 @@ function applyTheme(){document.body.dataset.theme=state.settings.theme||'dark';
 
 /* ---------- звуки (реальные записи, Mixkit free license) ---------- */
 const SOUNDS=[['none','🔇 Тишина'],['rain','🌧 Дождь'],['ocean','🌊 Океан'],['forest','🌲 Лес'],['night','🌙 Ночь'],['wind','💨 Ветер'],['fire','🔥 Костёр']];
-let SNDNAME=null;
-function stopSound(){const a=document.getElementById('bgm');if(a){try{a.pause();a.currentTime=0;}catch(e){}}SNDNAME=null;}
-function playSound(t){const a=document.getElementById('bgm');if(!a)return;
- if(!t||t==='none'){stopSound();return;}
- try{if(SNDNAME!==t){a.src='assets/sounds/'+t+'.mp3';SNDNAME=t;}a.loop=true;a.volume=0.6;
-  const p=a.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+let ACTX=null,ABUF={},SRC=null,GAIN=null,PLAYTOKEN=0;
+function actx(){try{ACTX=ACTX||new (window.AudioContext||window.webkitAudioContext)();if(ACTX.state==='suspended')ACTX.resume().catch(()=>{});}catch(e){}return ACTX;}
+function stopSound(){PLAYTOKEN++;if(SRC){try{SRC.stop();}catch(e){}SRC=null;}}
+async function loadBuf(t){if(!t||t==='none')return null;if(ABUF[t])return ABUF[t];
+ const c=actx();if(!c)return null;
+ try{const r=await fetch('assets/sounds/'+t+'.mp3');const ab=await r.arrayBuffer();
+  const b=await new Promise((res,rej)=>{try{c.decodeAudioData(ab,res,rej);}catch(e){rej(e);}});ABUF[t]=b;return b;}catch(e){return null;}}
+async function playSound(t){const my=++PLAYTOKEN;if(SRC){try{SRC.stop();}catch(e){}SRC=null;}
+ if(!t||t==='none')return;const c=actx();if(!c)return;
+ const b=await loadBuf(t);if(!b||my!==PLAYTOKEN)return;
+ try{GAIN=GAIN||c.createGain();GAIN.gain.value=0.55;GAIN.connect(c.destination);
+  SRC=c.createBufferSource();SRC.buffer=b;SRC.loop=true;SRC.connect(GAIN);SRC.start();}catch(e){}}
 
 /* ---------- действия ---------- */
 function addStick(n){const d=today();state.log[d]=state.log[d]||[];
@@ -330,7 +336,7 @@ function render(){const el=document.getElementById('app');
  else if(tab==='garden')el.innerHTML=viewGarden();
  else if(tab==='chat')el.innerHTML=viewChat();
  else if(tab==='stats')el.innerHTML=viewStats();
- else if(tab==='sos')el.innerHTML=viewSos();
+ else if(tab==='sos'){el.innerHTML=viewSos();loadBuf(state.settings.sound);}
  else if(tab==='plan')el.innerHTML=viewPlan();
  else if(tab==='pen')el.innerHTML=viewPen();
  else if(tab==='more')el.innerHTML=viewMore();
