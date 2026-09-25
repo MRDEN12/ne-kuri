@@ -136,7 +136,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925130427';
+const APP_ID='20260925134924';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -348,7 +348,7 @@ function render(){const el=document.getElementById('app');
 function renderNav(){const it=[['today','📆','Сегодня'],['garden','🌳','Сад'],['chat','💬','Оскар'],['stats','📊','Стата'],['sos','🆘','SOS']];
  document.getElementById('nav').innerHTML=it.map(([k,i,t])=>'<a href="#" class="'+(tab===k?'on':'')+'" onclick="tab=\''+k+'\';haptic();render();return false"><span class="i">'+i+'</span>'+t+'</a>').join('');}
 function pgHead(t,s){return '<div class="row between" style="margin:4px 2px 14px"><div><h1>'+t+'</h1><div class="sub">'+s+'</div></div>'+
- '<button class="ghost sm" onclick="tab=\'more\';render()">⋯</button></div>';}
+ '<button class="ghost sm" onclick="tab=\'more\';render()">☰</button></div>';}
 
 function viewToday(){const d=today(),s=smokedOn(d),L=currentLimit(),left=L-s,free=daysFree();
  const pct=L>0?Math.min(100,Math.round(s/L*100)):100,over=s>L;
