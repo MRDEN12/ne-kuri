@@ -136,7 +136,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260925134924';
+const APP_ID='20260925135222';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -495,8 +495,34 @@ function viewMore(){const rows=[['plan','📉','План снижения'],['pe
  '<div class="badge" onclick="exportData()"><span class="e">⬇️</span><span style="flex:1">Экспорт данных</span><span class="muted">›</span></div>'+
  '<div class="badge" onclick="installHelp()"><span class="e">📌</span><span style="flex:1">Ярлык на главный экран</span><span class="muted">›</span></div></div>';}
 function exportData(){const b=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='ne-kuryu-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Бэкап сохраняется ⬇️');}
-function installHelp(){const m=document.getElementById('modal');
- m.innerHTML='<div class="sheet"><h2>Ярлык на главный экран</h2><div class="muted" style="text-align:left;line-height:1.5">В Telegram открой приложение, затем меню <b>⋯ (вверху справа окна приложения)</b> → <b>«Добавить на главный экран»</b>. Появится иконка — будет открываться в один тап.</div><button class="ghost wide" style="margin-top:14px" onclick="closeModal()">Понял</button></div>';m.classList.add('on');}
+function detectPlat(){var p=(TG&&TG.platform)||'';return /ios|iphone|ipad|macos/i.test(p)?'ios':'android';}
+function copyLink(){var t='https://t.me/protiv_cureniya_bot';
+ try{navigator.clipboard?navigator.clipboard.writeText(t).then(function(){toast('Ссылка скопирована 📋')},function(){toast('Не вышло')}):toast('Не вышло');}catch(e){toast('Не вышло');}}
+var instPlat='android';
+function installHelp(){instPlat=detectPlat();renderInstall();}
+function setInst(p){instPlat=p;renderInstall();}
+function renderInstall(){var m=document.getElementById('modal');
+ var steps=instPlat==='ios'?[
+  'Открой приложение (кнопка «🚭 Не курю» в чате с ботом).',
+  'В шапке Telegram нажми <b>⋯</b> (меню приложения) → <b>«Добавить на главный экран»</b>.',
+  'Если пункта нет — скопируй ссылку ниже и открой её в <b>Safari</b>.',
+  'В Safari: кнопка <b>«Поделиться»</b> (квадрат со стрелкой) → <b>«На экран «Домой»»</b>.',
+  'Назови «Не курю» и нажми «Добавить».'
+ ]:[
+  'Открой приложение (кнопка «🚭 Не курю» в чате с ботом).',
+  'В шапке Telegram справа нажми <b>⋮</b> (три точки).',
+  'Выбери <b>«Добавить на главный экран»</b>.',
+  'Готово — иконка на рабочем столе, тап открывает трекер.'
+ ];
+ m.innerHTML='<div class="sheet" style="text-align:left"><h2 style="text-align:center">📌 Ярлык на главный экран</h2>'+
+  '<div class="chips" style="justify-content:center;margin-bottom:10px">'+
+   '<span class="chip '+(instPlat==='android'?'on':'')+'" onclick="setInst(\'android\')">🤖 Android</span>'+
+   '<span class="chip '+(instPlat==='ios'?'on':'')+'" onclick="setInst(\'ios\')">🍎 iPhone</span></div>'+
+  steps.map(function(s,i){return '<div class="badge"><span class="e">'+(i+1)+'</span><span style="flex:1">'+s+'</span></div>';}).join('')+
+  '<button class="ghost wide" style="margin-top:14px" onclick="copyLink()">📋 Скопировать ссылку</button>'+
+  '<button class="wide" style="margin-top:8px" onclick="closeModal()">Понял</button>'+
+  '<div class="muted" style="margin-top:10px;font-size:11.5px">Ярлык — функция Telegram: иконка на рабочем столе открывает трекер в один тап.</div></div>';
+ m.classList.add('on');}
 
 function viewSettings(){const s=state;
  return pgHead('Настройки','Параметры')+
