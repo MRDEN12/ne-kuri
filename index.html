@@ -137,7 +137,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260926195625';
+const APP_ID='20260926234322';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -146,7 +146,9 @@ let API_BASE='';
 
 const DAY=86400000,pad=n=>String(n).padStart(2,'0');
 const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-const today=()=>fmtD(new Date());
+let DAYSHIFT=4;/* новый день начинается в 04:00: ночные стики остаются на текущем дне */
+const dkey=d=>fmtD(new Date(d.getTime()-DAYSHIFT*3600000));
+const today=()=>dkey(new Date());
 const parseD=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
 const diffDays=(a,b)=>Math.round((parseD(b)-parseD(a))/DAY);
 const human=s=>{const a=s.split('-');return a[2]+'.'+a[1]+'.'+a[0];};
@@ -177,7 +179,7 @@ const ACCENTS={green:'#34d399',blue:'#60a5fa',violet:'#a78bfa',pink:'#f472b6',or
 const DEFAULT={v:3,startDate:today(),quitDate:null,plan:{startLimit:20,step:2,everyDays:7},
  manualLimit:{},log:{},cravings:[],penalties:[],slips:[],chat:[],challenge:{},wish:null,
  garden:{leaves:0,tree:'oak',decor:[],bg:'day',lastTick:null,bought:{oak:1,day:1}},
- settings:{pricePerStick:38,cur:'₸',activeHours:16,cooldownMode:'auto',cooldownMin:50,penaltyOn:true,
+ settings:{pricePerStick:38,cur:'₸',activeHours:16,dayShift:4,cooldownMode:'auto',cooldownMin:50,penaltyOn:true,
            theme:'dark',accent:'green',quietFrom:23,quietTo:8,sound:'none'}};
 let state=JSON.parse(JSON.stringify(DEFAULT)),tab='today',cdTick=null,cdFired=false,cdInit=false,sosTimer=null;
 
@@ -186,7 +188,7 @@ function merge(o){state=Object.assign({},JSON.parse(JSON.stringify(DEFAULT)),o||
  state.settings=Object.assign({},DEFAULT.settings,(o&&o.settings)||{});
  state.garden=Object.assign({},DEFAULT.garden,(o&&o.garden)||{});
  state.garden.bought=Object.assign({oak:1,day:1},(o&&o.garden&&o.garden.bought)||{});
- state.wish=(o&&o.wish)?o.wish:JSON.parse(JSON.stringify(WISH));}
+ state.wish=(o&&o.wish)?o.wish:JSON.parse(JSON.stringify(WISH));const _dss=+state.settings.dayShift;DAYSHIFT=isFinite(_dss)?_dss:4;}
 function save(){const s=JSON.stringify(state);if(TG&&TG.CloudStorage){TG.CloudStorage.setItem('nk_state',s,()=>{});}try{localStorage.setItem('nk_state',s);}catch(e){}}
 function load(cb){if(TG&&TG.CloudStorage){TG.CloudStorage.getItem('nk_state',(e,v)=>{if(v){try{merge(JSON.parse(v));}catch(x){}}else{try{const l=localStorage.getItem('nk_state');if(l)merge(JSON.parse(l));}catch(x){}}cb&&cb();});}
  else{try{const l=localStorage.getItem('nk_state');if(l)merge(JSON.parse(l));}catch(e){}cb&&cb();}}
@@ -206,20 +208,20 @@ function cooldownMin(){const s=state.settings,L=currentLimit();
 const cooldownMs=()=>cooldownMin()*60000;
 function cooldownLeft(){const t=lastAny();return t?Math.max(0,t+cooldownMs()-Date.now()):0;}
 const currentLimit=()=>limitFor(today());
-function nextStep(){const L=currentLimit();for(let i=1;i<=120;i++){const d=new Date();d.setDate(d.getDate()+i);const l=limitFor(fmtD(d));if(l<L)return{date:fmtD(d),limit:l};}return null;}
-function zeroDate(){for(let i=0;i<=400;i++){const d=new Date();d.setDate(d.getDate()+i);if(limitFor(fmtD(d))===0)return fmtD(d);}return null;}
-function streakUnder(){let n=0;const d=new Date();for(let i=0;i<400;i++){const ds=fmtD(d);const s=smokedOn(ds);if(s===0&&i>0){d.setDate(d.getDate()-1);continue;}if(s<=limitFor(ds))n++;else break;d.setDate(d.getDate()-1);}return n;}
-function daysFree(){if(!state.quitDate)return 0;const q=parseD(state.quitDate);const t=new Date();q.setHours(0,0,0,0);t.setHours(0,0,0,0);let n=Math.floor((t-q)/DAY);if(n<0)return 0;for(let i=0;i<=n;i++){const d=new Date(q);d.setDate(d.getDate()+i);if(smokedOn(fmtD(d))>0)return 0;}return n;}
+function nextStep(){const L=currentLimit();for(let i=1;i<=120;i++){const d=new Date();d.setDate(d.getDate()+i);const l=limitFor(dkey(d));if(l<L)return{date:dkey(d),limit:l};}return null;}
+function zeroDate(){for(let i=0;i<=400;i++){const d=new Date();d.setDate(d.getDate()+i);if(limitFor(dkey(d))===0)return dkey(d);}return null;}
+function streakUnder(){let n=0;const d=new Date();for(let i=0;i<400;i++){const ds=dkey(d);const s=smokedOn(ds);if(s===0&&i>0){d.setDate(d.getDate()-1);continue;}if(s<=limitFor(ds))n++;else break;d.setDate(d.getDate()-1);}return n;}
+function daysFree(){if(!state.quitDate)return 0;const q=parseD(state.quitDate);const t=new Date();q.setHours(0,0,0,0);t.setHours(0,0,0,0);let n=Math.floor((t-q)/DAY);if(n<0)return 0;for(let i=0;i<=n;i++){const d=new Date(q);d.setDate(d.getDate()+i);if(smokedOn(dkey(d))>0)return 0;}return n;}
 function total(){let t=0;for(const k in state.log)t+=state.log[k].length;return t;}
-function avg7(){let s=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);s+=smokedOn(fmtD(d));}return s/7;}
-function spent7(){let s=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);s+=smokedOn(fmtD(d));}return s*state.settings.pricePerStick;}
+function avg7(){let s=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);s+=smokedOn(dkey(d));}return s/7;}
+function spent7(){let s=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);s+=smokedOn(dkey(d));}return s*state.settings.pricePerStick;}
 function avoided(){let n=0;const di=Math.max(0,diffDays(state.startDate,today()));for(let i=0;i<=di;i++){const d=parseD(state.startDate);d.setDate(d.getDate()+i);const l=limitFor(fmtD(d));n+=Math.max(0,l-smokedOn(fmtD(d)));}return n;}
 function timeSavedMin(){return avoided()*MIN_PER_STICK;}
 const hm=m=>Math.floor(m/60)+' ч '+(m%60)+' мин';
 function savedMoney(){return avoided()*state.settings.pricePerStick;}
 
 /* ---------- листья (валюта) ---------- */
-function yest(){const d=new Date();d.setDate(d.getDate()-1);return fmtD(d);}
+function yest(){const d=parseD(today());d.setDate(d.getDate()-1);return fmtD(d);}
 function accrue(){
  const g=state.garden;let cur=g.lastTick;
  if(!cur){g.lastTick=yest();return;}
@@ -227,8 +229,8 @@ function accrue(){
  if(diffDays(cur,yest())<1){return;}
  let d=parseD(cur);d.setDate(d.getDate()+1);
  let guard=0;
- while(fmtD(d)<=yest()&&guard++<400){
-   const ds=fmtD(d);const s=smokedOn(ds),L=limitFor(ds);
+ while(dkey(d)<=yest()&&guard++<400){
+   const ds=dkey(d);const s=smokedOn(ds),L=limitFor(ds);
    if(s<=L){g.leaves+=5;if(s===0)g.leaves+=5;}
    d.setDate(d.getDate()+1);
  }
@@ -423,7 +425,7 @@ function viewChat(){
   '<div class="chatinput"><textarea id="chatIn" placeholder="Напиши, что чувствуешь…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><button onclick="sendChat()">➤</button></div>'+
   '<div style="height:70px"></div>';}
 
-function viewStats(){let bars='';const arr=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);arr.push(fmtD(d));}
+function viewStats(){let bars='';const arr=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);arr.push(dkey(d));}
  const max=Math.max(1,...arr.map(d=>Math.max(smokedOn(d),limitFor(d))));
  arr.forEach(ds=>{const s=smokedOn(ds),L=limitFor(ds);const wd=['вс','пн','вт','ср','чт','пт','сб'][parseD(ds).getDay()];
   bars+='<div class="col" title="'+human(ds)+': '+s+'/'+L+'"><i class="'+(s===0?'empty':(s>L?'over':''))+'" style="height:'+Math.max(3,Math.round(s/max*100))+'%"></i><span>'+wd+'</span></div>';});
