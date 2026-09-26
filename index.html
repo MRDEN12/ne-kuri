@@ -137,7 +137,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260926234322';
+const APP_ID='20260926235103';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -146,8 +146,8 @@ let API_BASE='';
 
 const DAY=86400000,pad=n=>String(n).padStart(2,'0');
 const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-let DAYSHIFT=4;/* новый день начинается в 04:00: ночные стики остаются на текущем дне */
-const dkey=d=>fmtD(new Date(d.getTime()-DAYSHIFT*3600000));
+const TZ_H=5;/* день считаем по казахстанскому времени (UTC+5) */
+const dkey=d=>{const x=new Date((d||new Date()).getTime()+TZ_H*3600000);return x.getUTCFullYear()+'-'+pad(x.getUTCMonth()+1)+'-'+pad(x.getUTCDate());};
 const today=()=>dkey(new Date());
 const parseD=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
 const diffDays=(a,b)=>Math.round((parseD(b)-parseD(a))/DAY);
@@ -188,7 +188,7 @@ function merge(o){state=Object.assign({},JSON.parse(JSON.stringify(DEFAULT)),o||
  state.settings=Object.assign({},DEFAULT.settings,(o&&o.settings)||{});
  state.garden=Object.assign({},DEFAULT.garden,(o&&o.garden)||{});
  state.garden.bought=Object.assign({oak:1,day:1},(o&&o.garden&&o.garden.bought)||{});
- state.wish=(o&&o.wish)?o.wish:JSON.parse(JSON.stringify(WISH));const _dss=+state.settings.dayShift;DAYSHIFT=isFinite(_dss)?_dss:4;}
+ state.wish=(o&&o.wish)?o.wish:JSON.parse(JSON.stringify(WISH));}
 function save(){const s=JSON.stringify(state);if(TG&&TG.CloudStorage){TG.CloudStorage.setItem('nk_state',s,()=>{});}try{localStorage.setItem('nk_state',s);}catch(e){}}
 function load(cb){if(TG&&TG.CloudStorage){TG.CloudStorage.getItem('nk_state',(e,v)=>{if(v){try{merge(JSON.parse(v));}catch(x){}}else{try{const l=localStorage.getItem('nk_state');if(l)merge(JSON.parse(l));}catch(x){}}cb&&cb();});}
  else{try{const l=localStorage.getItem('nk_state');if(l)merge(JSON.parse(l));}catch(e){}cb&&cb();}}
