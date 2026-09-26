@@ -137,7 +137,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260926235103';
+const APP_ID='20260927012945';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -352,6 +352,7 @@ function render(){const el=document.getElementById('app');
  else if(tab==='chat')el.innerHTML=viewChat();
  else if(tab==='stats')el.innerHTML=viewStats();
  else if(tab==='sos'){el.innerHTML=viewSos();loadBuf(state.settings.sound);}
+ else if(tab==='game'){el.innerHTML=viewGame();startGame();}
  else if(tab==='plan')el.innerHTML=viewPlan();
  else if(tab==='pen')el.innerHTML=viewPen();
  else if(tab==='more')el.innerHTML=viewMore();
@@ -360,7 +361,7 @@ function render(){const el=document.getElementById('app');
  else if(tab==='settings')el.innerHTML=viewSettings();
  renderNav();if(tab==='today')startCd();else clearInterval(cdTick);
  if(tab==='chat'){const c=document.getElementById('chatScroll');if(c)c.scrollTop=c.scrollHeight;}}
-function nav(k){if(tab==='sos'&&k!=='sos')stopSound();tab=k;haptic();render();}
+function nav(k){if(tab==='sos'&&k!=='sos')stopSound();if(typeof stopGame==='function'&&tab==='game'&&k!=='game')stopGame();tab=k;haptic();render();}
 function renderNav(){const it=[['today','📆','Сегодня'],['garden','🌳','Сад'],['chat','💬','Оскар'],['stats','📊','Стата'],['sos','🆘','SOS']];
  document.getElementById('nav').innerHTML=it.map(([k,i,t])=>'<a href="#" class="'+(tab===k?'on':'')+'" onclick="nav(\''+k+'\');return false"><span class="i">'+i+'</span>'+t+'</a>').join('');}
 function pgHead(t,s){return '<div class="row between" style="margin:4px 2px 14px"><div><h1>'+t+'</h1><div class="sub">'+s+'</div></div>'+
@@ -458,7 +459,8 @@ function viewSos(){const cs=state.cravings.slice(0,6);
   sounds.map(s=>'<span class="chip '+(state.settings.sound===s[0]?'on':'')+'" onclick="setSound(\''+s[0]+'\')">'+s[1]+'</span>').join('')+'</div>'+
   '<div class="muted" id="sndStatus" style="margin-top:6px;font-size:11.5px">звук: '+SNDSTATUS+'</div>'+
   '<div class="grid2" style="margin-top:12px"><button onclick="startSos(300)">▶️ 5 минут</button><button class="ghost" onclick="startSos(120)">⚡ 2 минуты</button></div>'+
-  '<button class="ghost wide" style="margin-top:8px" onclick="stopSound();toast(\'Звук выключен\')">⏹ Стоп звук</button></div>'+
+  '<button class="ghost wide" style="margin-top:8px" onclick="stopSound();toast(\'Звук выключен\')">⏹ Стоп звук</button>'+
+  '<button class="wide" style="margin-top:8px" onclick="tab=\'game\';render()">🎮 Мини-игра от тяги (60 сек)</button></div>'+
   '<div class="card"><div class="muted" style="margin-bottom:6px">Что сделать прямо сейчас</div>'+
   '<div class="badge"><span class="e">💧</span><span>Выпей воды мелкими глотками</span></div>'+
   '<div class="badge"><span class="e">🌬</span><span>Дыхание 4-7-8: вдох 4с, задержка 7с, выдох 8с — 5 раз</span></div>'+
@@ -481,6 +483,47 @@ function startSos(sec){const el=document.getElementById('sosT');if(!el)return;cl
  const tick=()=>{el.textContent=pad(Math.floor(t/60))+':'+pad(t%60);
   if(t<=0){clearInterval(sosTimer);el.textContent='✅ Пережил!';stopSound();logCraving(null,'Потерпел');return;}t--;};
  tick();sosTimer=setInterval(tick,1000);}
+
+
+/* ---------- мини-игра SOS: «Лопни дым» ---------- */
+let gameRAF=null,gameSt=null;
+function viewGame(){return pgHead('Мини-игра','Отвлеки мозг на 60 секунд')+
+ '<div class="card">'+
+ '<div class="row between"><div><div class="muted">Очки</div><div class="big" id="gScore">0</div></div>'+
+ '<div><div class="muted">Секунд</div><div class="big" id="gTime">60</div></div>'+
+ '<div><div class="muted">Упущено</div><div class="big" id="gMiss">0</div></div></div>'+
+ '<div id="gField" style="position:relative;height:46vh;margin-top:10px;overflow:hidden;border-radius:14px;background:linear-gradient(180deg,#0b1220,#111827)"></div>'+
+ '<div class="muted" style="margin-top:8px;min-height:16px">Тапай по кругам дыма — они поднимаются вверх. Цель: не дать им улететь.</div>'+
+ '<button class="ghost wide" style="margin-top:10px" onclick="stopGame();tab=\'sos\';render()">⬅ Назад к SOS</button></div>';}
+function stopGame(){if(gameRAF){cancelAnimationFrame(gameRAF);gameRAF=null;}gameSt=null;}
+function startGame(){stopGame();const f=document.getElementById('gField');if(!f)return;
+ const st={score:0,miss:0,left:60,bubbles:[],last:performance.now(),spawnT:.4};gameSt=st;
+ const upd=()=>{const a=document.getElementById('gScore'),b=document.getElementById('gTime'),c=document.getElementById('gMiss');
+  if(a)a.textContent=st.score;if(b)b.textContent=Math.max(0,Math.ceil(st.left));if(c)c.textContent=st.miss;};
+ const spawn=()=>{const size=34+Math.random()*44,el=document.createElement('div');
+  el.style.cssText='position:absolute;border-radius:50%;cursor:pointer;border:1px solid rgba(255,255,255,.28);background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.5),rgba(148,163,184,.18))';
+  el.style.width=size+'px';el.style.height=size+'px';
+  const b={x:Math.random()*Math.max(10,f.clientWidth-size),y:f.clientHeight+size,size:size,vy:-(32+Math.random()*44),vx:(Math.random()-.5)*20,el:el,dead:false};
+  el.style.left=b.x+'px';el.style.top=b.y+'px';
+  el.onclick=(e)=>{e.stopPropagation();if(b.dead)return;b.dead=true;st.score++;el.style.transition='transform .1s';el.style.transform='scale(0)';setTimeout(()=>el.remove(),110);try{haptic('light');}catch(x){}upd();};
+  f.appendChild(el);st.bubbles.push(b);};
+ const loop=(now)=>{if(!gameSt)return;const dt=Math.min(.05,(now-st.last)/1000);st.last=now;st.left-=dt;
+  st.spawnT-=dt;if(st.spawnT<=0){spawn();st.spawnT=Math.max(.3,.8-(60-st.left)/220);}
+  st.bubbles.forEach(b=>{b.y+=b.vy*dt;b.x+=b.vx*dt;if(b.x<0||b.x>f.clientWidth-b.size)b.vx*=-1;
+   b.el.style.top=b.y+'px';b.el.style.left=b.x+'px';
+   if(b.y<-b.size-8&&!b.dead){b.dead=true;b.el.remove();st.miss++;}});
+  upd();
+  if(st.left<=0){finishGame();return;}
+  gameRAF=requestAnimationFrame(loop);};
+ gameRAF=requestAnimationFrame(loop);}
+function finishGame(){const st=gameSt;const sc=st?st.score:0;stopGame();
+ state.garden.leaves+=3;state.cravings.unshift({t:Date.now(),i:1,help:'Мини-игра ('+sc+' очк.)'});save();
+ const m=document.getElementById('modal');
+ m.innerHTML='<div class="sheet"><div style="font-size:40px">🎉</div><h2>Минута прошла!</h2>'+
+  '<div class="muted">Очки: <b>'+sc+'</b> · награда +3 🍃<br><br>Тяга живёт 3–5 минут. Ты отвлёк мозг и проскочил самый пик 💪</div>'+
+  '<div class="grid2" style="margin-top:14px"><button onclick="closeModal();tab=\'sos\';render()">Ещё 5 минут в SOS</button>'+
+  '<button class="ghost" onclick="closeModal();tab=\'game\';render()">Играть ещё</button></div></div>';
+ m.classList.add('on');}
 
 function viewPlan(){const cur=currentLimit(),start=state.plan.startLimit,prog=start>0?Math.round((start-cur)/Math.max(1,start)*100):100;
  const nxt=nextStep(),zd=zeroDate();let rows='';
