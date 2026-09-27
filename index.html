@@ -137,7 +137,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260927104211';
+const APP_ID='20260927230027';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -379,6 +379,7 @@ function render(){const el=document.getElementById('app');
  else if(tab==='stats')el.innerHTML=viewStats();
  else if(tab==='sos'){el.innerHTML=viewSos();loadBuf(state.settings.sound);}
  else if(tab==='game'){el.innerHTML=viewGame();startGame();}
+ else if(tab==='breath'){el.innerHTML=viewBreath();}
  else if(tab==='plan')el.innerHTML=viewPlan();
  else if(tab==='pen')el.innerHTML=viewPen();
  else if(tab==='more')el.innerHTML=viewMore();
@@ -387,7 +388,7 @@ function render(){const el=document.getElementById('app');
  else if(tab==='settings')el.innerHTML=viewSettings();
  renderNav();if(tab==='today')startCd();else clearInterval(cdTick);
  if(tab==='chat'){const c=document.getElementById('chatScroll');if(c)c.scrollTop=c.scrollHeight;}}
-function nav(k){if(tab==='sos'&&k!=='sos')stopSound();if(typeof stopGame==='function'&&tab==='game'&&k!=='game')stopGame();tab=k;haptic();render();}
+function nav(k){if(tab==='sos'&&k!=='sos')stopSound();if(typeof stopGame==='function'&&tab==='game'&&k!=='game')stopGame();if(typeof stopBreath==='function'&&tab==='breath'&&k!=='breath')stopBreath();tab=k;haptic();render();}
 function renderNav(){const it=[['today','📆','Сегодня'],['garden','🌳','Сад'],['chat','💬','Оскар'],['stats','📊','Стата'],['sos','🆘','SOS']];
  document.getElementById('nav').innerHTML=it.map(([k,i,t])=>'<a href="#" class="'+(tab===k?'on':'')+'" onclick="nav(\''+k+'\');return false"><span class="i">'+i+'</span>'+t+'</a>').join('');}
 function pgHead(t,s){return '<div class="row between" style="margin:4px 2px 14px"><div><h1>'+t+'</h1><div class="sub">'+s+'</div></div>'+
@@ -486,7 +487,8 @@ function viewSos(){const cs=state.cravings.slice(0,6);
   '<div class="muted" id="sndStatus" style="margin-top:6px;font-size:11.5px">звук: '+SNDSTATUS+'</div>'+
   '<div class="grid2" style="margin-top:12px"><button onclick="startSos(300)">▶️ 5 минут</button><button class="ghost" onclick="startSos(120)">⚡ 2 минуты</button></div>'+
   '<button class="ghost wide" style="margin-top:8px" onclick="stopSound();toast(\'Звук выключен\')">⏹ Стоп звук</button>'+
-  '<button class="wide" style="margin-top:8px" onclick="tab=\'game\';render()">🎮 Мини-игра от тяги (60 сек)</button></div>'+
+  '<button class="wide" style="margin-top:8px" onclick="tab=\'game\';render()">🎮 Мини-игра от тяги (60 сек)</button>'+
+ '<button class="wide" style="margin-top:8px" onclick="tab=\'breath\';render()">🫁 Дыхательный круг 4-7-8</button></div>'+
   '<div class="card"><div class="muted" style="margin-bottom:6px">Что сделать прямо сейчас</div>'+
   '<div class="badge"><span class="e">💧</span><span>Выпей воды мелкими глотками</span></div>'+
   '<div class="badge"><span class="e">🌬</span><span>Дыхание 4-7-8: вдох 4с, задержка 7с, выдох 8с — 5 раз</span></div>'+
@@ -549,6 +551,42 @@ function finishGame(){const st=gameSt;const sc=st?st.score:0;stopGame();
   '<div class="muted">Очки: <b>'+sc+'</b> · награда +3 🍃<br><br>Тяга живёт 3–5 минут. Ты отвлёк мозг и проскочил самый пик 💪</div>'+
   '<div class="grid2" style="margin-top:14px"><button onclick="closeModal();tab=\'sos\';render()">Ещё 5 минут в SOS</button>'+
   '<button class="ghost" onclick="closeModal();tab=\'game\';render()">Играть ещё</button></div></div>';
+ m.classList.add('on');}
+
+/* ---------- дыхательный круг 4-7-8 ---------- */
+let breathT=null;
+function viewBreath(){return pgHead('Дыхательный круг','Вдох 4 · задержка 7 · выдох 8')+
+ '<div class="card"><div class="muted" id="brPhase" style="text-align:center;min-height:18px">Нажми «Старт» — и дыши вместе с кругом</div>'+
+ '<div style="height:44vh;display:flex;align-items:center;justify-content:center">'+
+ '<div id="brCircle" style="width:130px;height:130px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--acc);background:radial-gradient(circle at 35% 30%,rgba(52,211,153,.55),rgba(52,211,153,.14));transition:transform 4s linear;will-change:transform">'+
+ '<div id="brCount" style="font-size:22px;font-weight:700;opacity:.9">4-7-8</div></div></div>'+
+ '<div class="muted" id="brInfo" style="text-align:center">Цикл 0 / 4</div>'+
+ '<div class="grid2" style="margin-top:12px"><button id="brBtn" onclick="toggleBreath()">▶️ Старт</button>'+
+ '<button class="ghost" onclick="stopBreath();tab=\'sos\';render()">⬅ Назад к SOS</button></div></div>'+
+ '<div class="badge"><span class="e">🌬</span><span>Вдох носом 4 сек → задержка 7 сек → выдох ртом 8 сек</span></div>'+
+ '<div class="note">Удлинённый выдох включает парасимпатику — пульс падает, тяга слабеет. Хватит 4 циклов (~76 секунд).</div>';}
+function toggleBreath(){if(breathT){stopBreath();toast('Пауза');}else startBreath();}
+function startBreath(){stopBreath();
+ const C=document.getElementById('brCircle'),P=document.getElementById('brPhase'),I=document.getElementById('brInfo'),B=document.getElementById('brBtn');
+ if(!C)return;if(B)B.textContent='⏸ Пауза';
+ const ph=[['Вдох',4,1.9],['Задержка',7,1.9],['Выдох',8,1.0]];
+ let cycle=0,pi=0,left=ph[0][1];
+ const apply=()=>{const n=ph[pi][0],s=ph[pi][1],sc=ph[pi][2];
+  P.textContent=n+' · '+s+' сек';I.textContent='Цикл '+cycle+' / 4';
+  C.style.transition='transform '+s+'s linear';C.style.transform='scale('+sc+')';try{haptic('light');}catch(e){}};
+ apply();
+ breathT=setInterval(()=>{left--;if(left<=0){pi++;if(pi>=ph.length){pi=0;cycle++;if(cycle>=4){finishBreath();return;}}left=ph[pi][1];apply();}},1000);}
+function stopBreath(){if(breathT){clearInterval(breathT);breathT=null;}
+ const C=document.getElementById('brCircle');if(C){C.style.transition='transform .4s';C.style.transform='scale(1)';}
+ const B=document.getElementById('brBtn');if(B)B.textContent='▶️ Старт';
+ const P=document.getElementById('brPhase');if(P&&P.textContent.indexOf('сек')>0)P.textContent='Пауза';}
+function finishBreath(){stopBreath();
+ state.garden.leaves+=3;state.cravings.unshift({t:Date.now(),i:1,help:'Дыхание 4-7-8'});save();haptic('heavy');
+ const m=document.getElementById('modal');
+ m.innerHTML='<div class="sheet"><div style="font-size:40px">🌬</div><h2>4 цикла — готово!</h2>'+
+  '<div class="muted">+3 🍃 в сад. Тяга — это волна: она всегда спадает за 3–5 минут. Ты её продышал 💪</div>'+
+  '<div class="grid2" style="margin-top:14px"><button onclick="closeModal();tab=\'breath\';render()">Ещё круг</button>'+
+  '<button class="ghost" onclick="closeModal();tab=\'sos\';render()">Назад к SOS</button></div></div>';
  m.classList.add('on');}
 
 function viewPlan(){const cur=currentLimit(),start=state.plan.startLimit,prog=start>0?Math.round((start-cur)/Math.max(1,start)*100):100;
