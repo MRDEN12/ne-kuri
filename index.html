@@ -137,7 +137,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260927012945';
+const APP_ID='20260927104211';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -189,9 +189,32 @@ function merge(o){state=Object.assign({},JSON.parse(JSON.stringify(DEFAULT)),o||
  state.garden=Object.assign({},DEFAULT.garden,(o&&o.garden)||{});
  state.garden.bought=Object.assign({oak:1,day:1},(o&&o.garden&&o.garden.bought)||{});
  state.wish=(o&&o.wish)?o.wish:JSON.parse(JSON.stringify(WISH));}
-function save(){const s=JSON.stringify(state);if(TG&&TG.CloudStorage){TG.CloudStorage.setItem('nk_state',s,()=>{});}try{localStorage.setItem('nk_state',s);}catch(e){}}
-function load(cb){if(TG&&TG.CloudStorage){TG.CloudStorage.getItem('nk_state',(e,v)=>{if(v){try{merge(JSON.parse(v));}catch(x){}}else{try{const l=localStorage.getItem('nk_state');if(l)merge(JSON.parse(l));}catch(x){}}cb&&cb();});}
- else{try{const l=localStorage.getItem('nk_state');if(l)merge(JSON.parse(l));}catch(e){}cb&&cb();}}
+/* CloudStorage держит максимум 4096 символов на значение -> сохраняем состояние ЧАНКАМИ,
+   плюс держим полную копию в localStorage и при загрузке берём более свежую из двух. */
+const CS_PREFIX='nkstate_',CS_CHUNK=3500;let csPrevChunks=0,LOAD_SRC='none';
+function parseState(txt){if(!txt)return null;try{return JSON.parse(txt);}catch(e){return null;}}
+function scoreState(o){if(!o)return -1;let t=0,last=0;if(o.log){for(const k in o.log){const a=o.log[k]||[];t+=a.length;for(let i=0;i<a.length;i++)if(a[i]>last)last=a[i];}}return t*1e15+last;}
+function pickState(){let best=null,bs=-1;for(let i=0;i<arguments.length;i++){const o=arguments[i];if(!o)continue;const s=scoreState(o);if(s>bs){bs=s;best=o;}}return best;}
+function csSet(k,v){try{TG.CloudStorage.setItem(k,v,()=>{});}catch(e){}}
+function csGet(k){return new Promise(r=>{try{TG.CloudStorage.getItem(k,(e,v)=>r(v==null?null:v));}catch(e){r(null);}});}
+function loadCloud(){if(!(TG&&TG.CloudStorage))return Promise.resolve(null);
+ return csGet(CS_PREFIX+'meta').then(m=>{let meta=null;try{meta=JSON.parse(m);}catch(e){}
+  if(!meta||!meta.n)return csGet('nk_state').then(parseState);/* legacy-фолбэк */
+  let parts=[],p=Promise.resolve();
+  for(let i=0;i<meta.n;i++){(function(k){p=p.then(()=>csGet(CS_PREFIX+k).then(v=>{parts.push(v);}));})(i);}
+  return p.then(()=>{if(parts.some(x=>x==null))return null;return parseState(parts.join(''));});});}
+function save(){state.savedAt=Date.now();const s=JSON.stringify(state);
+ try{localStorage.setItem('nk_state',s);}catch(e){}
+ if(TG&&TG.CloudStorage){const n=Math.max(1,Math.ceil(s.length/CS_CHUNK));
+  for(let i=0;i<n;i++)csSet(CS_PREFIX+i,s.slice(i*CS_CHUNK,(i+1)*CS_CHUNK));
+  csSet(CS_PREFIX+'meta',JSON.stringify({n:n,len:s.length,at:state.savedAt}));
+  for(let i=n;i<csPrevChunks;i++){try{TG.CloudStorage.removeItem(CS_PREFIX+i,()=>{});}catch(e){}}
+  csPrevChunks=n;}}
+function load(cb){let local=null;try{local=parseState(localStorage.getItem('nk_state'));}catch(e){}
+ loadCloud().then(cloud=>{const best=pickState(cloud,local);
+  LOAD_SRC=(cloud&&best===cloud)?'cloud':((local&&best===local)?'local':'empty');
+  if(best)merge(best);cb&&cb();})
+ .catch(()=>{if(local){LOAD_SRC='local';merge(local);}cb&&cb();});}
 
 /* ---------- домен ---------- */
 function limitFor(ds){if(state.manualLimit[ds]!=null)return state.manualLimit[ds];
@@ -296,6 +319,9 @@ function notifyServer(){if(!API_BASE)return;const L=currentLimit(),s=smokedOn(to
  try{fetch(API_BASE+'/hit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
   initData:(TG&&TG.initData)||'',cooldownMin:cooldownMin(),limit:L,left:Math.max(0,L-s),over:Math.max(0,s-L),
   quietFrom:state.settings.quietFrom,quietTo:state.settings.quietTo})}).catch(()=>{});}catch(e){}}
+function reportDiag(){if(!API_BASE)return;try{fetch(API_BASE+'/diag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+ initData:(TG&&TG.initData)||'',src:LOAD_SRC,size:JSON.stringify(state).length,total:total(),today:smokedOn(today()),
+ plan:diffDays(state.startDate,today())+1,cs:!!(TG&&TG.CloudStorage)})}).catch(()=>{});}catch(e){}}
 
 /* ---------- чат с Оскаром ---------- */
 function chatContext(){return 'день плана '+(diffDays(state.startDate,today())+1)+', лимит сегодня '+currentLimit()+
@@ -712,7 +738,7 @@ function updCd(){const el=document.getElementById('cdtime');if(!el)return;
 
 window.tab=tab;
 try{render();}catch(e){window.__err(e.message);}
-load(()=>{try{accrue();if(state.settings.theme==='auto'&&TG&&TG.colorScheme)state.settings.theme=TG.colorScheme==='light'?'light':'dark';if(!SOUNDS.some(x=>x[0]===state.settings.sound))state.settings.sound='none';applyTheme();render();}catch(e){window.__err(e.message);}});
+load(()=>{try{accrue();if(state.settings.theme==='auto'&&TG&&TG.colorScheme)state.settings.theme=TG.colorScheme==='light'?'light':'dark';if(!SOUNDS.some(x=>x[0]===state.settings.sound))state.settings.sound='none';applyTheme();render();save();}catch(e){window.__err(e.message);}try{setTimeout(reportDiag,3000);}catch(e){}});
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{const id=d&&d.id;if(!id||id===APP_ID)return;
  if(location.search.indexOf(id)>=0)return;if(sessionStorage.getItem('nk_upd')===id)return;
  sessionStorage.setItem('nk_upd',id);location.replace(location.pathname+'?id='+encodeURIComponent(id)+location.hash);}).catch(()=>{});}catch(e){}})();
