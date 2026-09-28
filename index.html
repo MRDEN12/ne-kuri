@@ -143,7 +143,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260928212015';
+const APP_ID='20260928212133';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -521,7 +521,7 @@ function startSos(sec){const el=document.getElementById('sosT');if(!el)return;cl
 
 /* ---------- мини-игра SOS: «Лопни дым» ---------- */
 let gameRAF=null,gameSt=null;
-const GAME_LIVES=5,GAME_SEC=60,GAME_WAVE_SEC=25;
+const GAME_LIVES=5,GAME_SEC=60,GAME_WAVE_SEC=10;
 function viewGame(){return pgHead('Мини-игра','Отвлеки мозг на 60 секунд')+
  '<div class="card">'+
  '<div class="gstats">'+
@@ -530,7 +530,7 @@ function viewGame(){return pgHead('Мини-игра','Отвлеки мозг �
   '<div class="gstat"><div class="lab">Волна</div><div class="val" id="gLevel">1</div></div>'+
   '<div class="gstat"><div class="lab">Сек</div><div class="val" id="gTime">60</div></div></div>'+
  '<div id="gField" style="position:relative;height:min(52vh,440px);min-height:240px;margin-top:10px;overflow:hidden;border-radius:14px;background:linear-gradient(180deg,#0b1220,#111827)"></div>'+
- '<div class="muted" style="margin-top:8px;min-height:16px;font-size:12.5px">Тапай круги дыма, пока они не улетели. Упустишь <b>5</b> — проиграл. Синие «супер» надо тапнуть 2–3 раза, и они летят по кривой. Каждые 25 сек — новая волна: быстрее и мельче.</div>'+
+ '<div class="muted" style="margin-top:8px;min-height:16px;font-size:12.5px">Тапай круги дыма, пока они не улетели. Упустишь <b>5</b> — проиграл. Синие «супер» надо тапнуть 2–3 раза, и они летят по кривой. Каждые 10 сек — новая волна: быстрее и мельче.</div>'+
  '<button class="ghost wide" style="margin-top:10px" onclick="stopGame();tab=\'sos\';render()">⬅ Назад к SOS</button></div>';}
 function stopGame(){if(gameRAF){cancelAnimationFrame(gameRAF);gameRAF=null;}gameSt=null;}
 function startGame(){stopGame();const f=document.getElementById('gField');if(!f)return;
