@@ -37,6 +37,12 @@ button.wide{width:100%}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px}
+.gstats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.gstat{min-width:0;overflow:hidden}
+.gstat .lab{font-size:11px;color:var(--dim);line-height:1.2;white-space:nowrap}
+.gstat .val{font-size:22px;font-weight:700;line-height:1.15;letter-spacing:-.5px}
+.gstat .val.hearts{font-size:15px;letter-spacing:-.5px;color:var(--bad);white-space:nowrap}
+#gField{touch-action:manipulation;overscroll-behavior:contain;user-select:none;-webkit-user-select:none}
 .stat b{display:block;font-size:21px;margin-top:2px}
 .stat span{font-size:11.5px;color:var(--dim)}
 .stat.tap{cursor:pointer}
@@ -137,7 +143,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260928123713';
+const APP_ID='20260928124938';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -518,13 +524,13 @@ let gameRAF=null,gameSt=null;
 const GAME_LIVES=5,GAME_SEC=60;
 function viewGame(){return pgHead('Мини-игра','Отвлеки мозг на 60 секунд')+
  '<div class="card">'+
- '<div class="row between">'+
-  '<div><div class="muted">Очки</div><div class="big" id="gScore">0</div></div>'+
-  '<div><div class="muted">Жизни</div><div class="big" id="gLives">♥♥♥♥♥</div></div>'+
-  '<div><div class="muted">Волна</div><div class="big" id="gLevel">1</div></div>'+
-  '<div><div class="muted">Сек</div><div class="big" id="gTime">60</div></div></div>'+
- '<div id="gField" style="position:relative;height:46vh;margin-top:10px;overflow:hidden;border-radius:14px;background:linear-gradient(180deg,#0b1220,#111827)"></div>'+
- '<div class="muted" style="margin-top:8px;min-height:16px">Тапай круги дыма, пока они не улетели. Упустишь <b>5</b> — проиграл. Синие «супер» надо тапнуть 2–3 раза, и они летят по кривой. Каждые 10 сек — новая волна: быстрее и мельче.</div>'+
+ '<div class="gstats">'+
+  '<div class="gstat"><div class="lab">Очки</div><div class="val" id="gScore">0</div></div>'+
+  '<div class="gstat"><div class="lab">Жизни</div><div class="val hearts" id="gLives">♥♥♥♥♥</div></div>'+
+  '<div class="gstat"><div class="lab">Волна</div><div class="val" id="gLevel">1</div></div>'+
+  '<div class="gstat"><div class="lab">Сек</div><div class="val" id="gTime">60</div></div></div>'+
+ '<div id="gField" style="position:relative;height:min(52vh,440px);min-height:240px;margin-top:10px;overflow:hidden;border-radius:14px;background:linear-gradient(180deg,#0b1220,#111827)"></div>'+
+ '<div class="muted" style="margin-top:8px;min-height:16px;font-size:12.5px">Тапай круги дыма, пока они не улетели. Упустишь <b>5</b> — проиграл. Синие «супер» надо тапнуть 2–3 раза, и они летят по кривой. Каждые 10 сек — новая волна: быстрее и мельче.</div>'+
  '<button class="ghost wide" style="margin-top:10px" onclick="stopGame();tab=\'sos\';render()">⬅ Назад к SOS</button></div>';}
 function stopGame(){if(gameRAF){cancelAnimationFrame(gameRAF);gameRAF=null;}gameSt=null;}
 function startGame(){stopGame();const f=document.getElementById('gField');if(!f)return;
