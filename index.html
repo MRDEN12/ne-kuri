@@ -137,7 +137,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20260927230027';
+const APP_ID='20260928123713';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -515,40 +515,75 @@ function startSos(sec){const el=document.getElementById('sosT');if(!el)return;cl
 
 /* ---------- мини-игра SOS: «Лопни дым» ---------- */
 let gameRAF=null,gameSt=null;
+const GAME_LIVES=5,GAME_SEC=60;
 function viewGame(){return pgHead('Мини-игра','Отвлеки мозг на 60 секунд')+
  '<div class="card">'+
- '<div class="row between"><div><div class="muted">Очки</div><div class="big" id="gScore">0</div></div>'+
- '<div><div class="muted">Секунд</div><div class="big" id="gTime">60</div></div>'+
- '<div><div class="muted">Упущено</div><div class="big" id="gMiss">0</div></div></div>'+
+ '<div class="row between">'+
+  '<div><div class="muted">Очки</div><div class="big" id="gScore">0</div></div>'+
+  '<div><div class="muted">Жизни</div><div class="big" id="gLives">♥♥♥♥♥</div></div>'+
+  '<div><div class="muted">Волна</div><div class="big" id="gLevel">1</div></div>'+
+  '<div><div class="muted">Сек</div><div class="big" id="gTime">60</div></div></div>'+
  '<div id="gField" style="position:relative;height:46vh;margin-top:10px;overflow:hidden;border-radius:14px;background:linear-gradient(180deg,#0b1220,#111827)"></div>'+
- '<div class="muted" style="margin-top:8px;min-height:16px">Тапай по кругам дыма — они поднимаются вверх. Цель: не дать им улететь.</div>'+
+ '<div class="muted" style="margin-top:8px;min-height:16px">Тапай круги дыма, пока они не улетели. Упустишь <b>5</b> — проиграл. Синие «супер» надо тапнуть 2–3 раза, и они летят по кривой. Каждые 10 сек — новая волна: быстрее и мельче.</div>'+
  '<button class="ghost wide" style="margin-top:10px" onclick="stopGame();tab=\'sos\';render()">⬅ Назад к SOS</button></div>';}
 function stopGame(){if(gameRAF){cancelAnimationFrame(gameRAF);gameRAF=null;}gameSt=null;}
 function startGame(){stopGame();const f=document.getElementById('gField');if(!f)return;
- const st={score:0,miss:0,left:60,bubbles:[],last:performance.now(),spawnT:.4};gameSt=st;
- const upd=()=>{const a=document.getElementById('gScore'),b=document.getElementById('gTime'),c=document.getElementById('gMiss');
-  if(a)a.textContent=st.score;if(b)b.textContent=Math.max(0,Math.ceil(st.left));if(c)c.textContent=st.miss;};
- const spawn=()=>{const size=34+Math.random()*44,el=document.createElement('div');
-  el.style.cssText='position:absolute;border-radius:50%;cursor:pointer;border:1px solid rgba(255,255,255,.28);background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.5),rgba(148,163,184,.18))';
+ const st={score:0,lives:GAME_LIVES,miss:0,left:GAME_SEC,level:1,bubbles:[],last:performance.now(),spawnT:.5,t:0};gameSt=st;
+ const upd=()=>{const a=document.getElementById('gScore'),b=document.getElementById('gTime'),c=document.getElementById('gLives'),d=document.getElementById('gLevel');
+  if(a)a.textContent=st.score;if(b)b.textContent=Math.max(0,Math.ceil(st.left));
+  if(c)c.textContent=st.lives>0?Array(st.lives+1).join('♥'):'—';
+  if(d)d.textContent=st.level;};
+ const pop=(el,sc)=>{el.style.transition='transform .12s';el.style.transform='scale('+sc+')';setTimeout(()=>{try{el.remove();}catch(e){}},120);};
+ const spawn=()=>{const lv=st.level;
+  const isSuper=Math.random()<Math.min(.4,.06*lv);
+  const size=Math.round(Math.max(26,58-(lv-1)*6)+(Math.random()*10-5));
+  const el=document.createElement('div');
+  const bg=isSuper?'radial-gradient(circle at 32% 30%,rgba(191,219,254,.9),rgba(37,99,235,.55))':'radial-gradient(circle at 32% 30%,rgba(255,255,255,.5),rgba(148,163,184,.18))';
+  el.style.cssText='position:absolute;border-radius:50%;cursor:pointer;border:1px solid rgba(255,255,255,.3);background:'+bg+';will-change:transform,top,left';
   el.style.width=size+'px';el.style.height=size+'px';
-  const b={x:Math.random()*Math.max(10,f.clientWidth-size),y:f.clientHeight+size,size:size,vy:-(32+Math.random()*44),vx:(Math.random()-.5)*20,el:el,dead:false};
+  let badge=null;
+  const b={x:Math.random()*Math.max(10,f.clientWidth-size),y:f.clientHeight+size,size:size,
+   vy:-(30+Math.random()*26)*(1+(lv-1)*.2),vx:(Math.random()-.5)*18*(1+(lv-1)*.15),
+   el:el,dead:false,hp:1,maxhp:1,kind:'normal',traj:'straight',phase:Math.random()*6.283,amp:0,freq:0,baseX:0,baseY:0,spin:0,zig:0};
+  if(isSuper){b.kind='super';b.maxhp=(lv>=4?3:2);b.hp=b.maxhp;const r=Math.random();
+   if(r<.4){b.traj='sine';b.amp=30+Math.random()*40;b.freq=1.6+Math.random()*1.5;b.baseX=b.x;b.vx=0;}
+   else if(r<.75){b.traj='zigzag';b.vx=0;}
+   else {b.traj='orbit';b.amp=40+Math.random()*30;b.spin=(Math.random()<.5?-1:1)*(1.4+Math.random());b.baseX=b.x;b.baseY=b.y;b.vx=0;}
+   badge=document.createElement('div');
+   badge.style.cssText='position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);font-size:'+Math.round(size*.48)+'px;pointer-events:none';
+   badge.textContent=b.hp;el.appendChild(badge);}
   el.style.left=b.x+'px';el.style.top=b.y+'px';
-  el.onclick=(e)=>{e.stopPropagation();if(b.dead)return;b.dead=true;st.score++;el.style.transition='transform .1s';el.style.transform='scale(0)';setTimeout(()=>el.remove(),110);try{haptic('light');}catch(x){}upd();};
+  el.onclick=(ev)=>{ev.stopPropagation();if(b.dead||!gameSt)return;
+   b.hp--;try{haptic('light');}catch(x){}
+   if(b.hp>0){if(badge)badge.textContent=b.hp;el.style.transform='scale(.85)';setTimeout(()=>{if(!b.dead)el.style.transform='scale(1)';},90);return;}
+   b.dead=true;st.score+=b.maxhp+1;pop(el,0);upd();};
   f.appendChild(el);st.bubbles.push(b);};
- const loop=(now)=>{if(!gameSt)return;const dt=Math.min(.05,(now-st.last)/1000);st.last=now;st.left-=dt;
-  st.spawnT-=dt;if(st.spawnT<=0){spawn();st.spawnT=Math.max(.3,.8-(60-st.left)/220);}
-  st.bubbles.forEach(b=>{b.y+=b.vy*dt;b.x+=b.vx*dt;if(b.x<0||b.x>f.clientWidth-b.size)b.vx*=-1;
+ const loop=(now)=>{if(!gameSt)return;const dt=Math.min(.05,(now-st.last)/1000);st.last=now;st.left-=dt;st.t+=dt;
+  st.level=Math.min(6,1+Math.floor((GAME_SEC-Math.max(0,st.left))/10));
+  st.spawnT-=dt;
+  if(st.spawnT<=0){spawn();const base=Math.max(.34,.95-(st.level-1)*.11);st.spawnT=base*(.75+Math.random()*.6);}
+  st.bubbles.forEach(b=>{if(b.dead)return;
+   if(b.traj==='sine'){b.baseX+=(b.vx||0)*dt;b.y+=b.vy*dt;b.x=b.baseX+Math.sin((st.t+b.phase)*b.freq)*b.amp;}
+   else if(b.traj==='orbit'){b.baseY+=b.vy*dt;b.y=b.baseY;b.x=b.baseX+Math.cos(st.t*b.spin+b.phase)*b.amp;}
+   else if(b.traj==='zigzag'){b.y+=b.vy*dt;b.zig-=dt;if(b.zig<=0){b.zig=.32+Math.random()*.34;b.vx=(Math.random()<.5?-1:1)*(40+Math.random()*80);}b.x+=b.vx*dt;}
+   else {b.y+=b.vy*dt;b.x+=b.vx*dt;}
+   if(b.x<0){b.x=0;b.vx=Math.abs(b.vx||20);}
+   if(b.x>f.clientWidth-b.size){b.x=f.clientWidth-b.size;b.vx=-Math.abs(b.vx||20);}
    b.el.style.top=b.y+'px';b.el.style.left=b.x+'px';
-   if(b.y<-b.size-8&&!b.dead){b.dead=true;b.el.remove();st.miss++;}});
+   if(b.y<-b.size-8){b.dead=true;try{b.el.remove();}catch(e){}st.miss++;st.lives--;try{haptic('medium');}catch(x){}
+    f.style.boxShadow='inset 0 0 0 3px rgba(239,68,68,.85)';setTimeout(()=>{f.style.boxShadow='none';},170);
+    if(st.lives<=0){finishGame(false);}}});
   upd();
-  if(st.left<=0){finishGame();return;}
+  if(gameSt&&st.left<=0){finishGame(true);return;}
   gameRAF=requestAnimationFrame(loop);};
  gameRAF=requestAnimationFrame(loop);}
-function finishGame(){const st=gameSt;const sc=st?st.score:0;stopGame();
- state.garden.leaves+=3;state.cravings.unshift({t:Date.now(),i:1,help:'Мини-игра ('+sc+' очк.)'});save();
+function finishGame(win){const st=gameSt;if(!st)return;const sc=st.score;stopGame();
+ const bonus=win?3:(sc>0?1:0);
+ state.garden.leaves+=bonus;
+ state.cravings.unshift({t:Date.now(),i:1,help:'Мини-игра ('+sc+' очк.)'+(win?'':' — продул')});save();
  const m=document.getElementById('modal');
- m.innerHTML='<div class="sheet"><div style="font-size:40px">🎉</div><h2>Минута прошла!</h2>'+
-  '<div class="muted">Очки: <b>'+sc+'</b> · награда +3 🍃<br><br>Тяга живёт 3–5 минут. Ты отвлёк мозг и проскочил самый пик 💪</div>'+
+ m.innerHTML='<div class="sheet"><div style="font-size:40px">'+(win?'🎉':'💨')+'</div><h2>'+(win?'Минута пройдена!':'Дым победил — в этот раз')+'</h2>'+
+  '<div class="muted">Очки: <b>'+sc+'</b> · упущено: '+st.miss+(bonus?' · награда +'+bonus+' 🍃':'')+'<br><br>'+(win?'Тяга живёт 3–5 минут. Ты отвлёк мозг и проскочил самый пик 💪':'Это всего лишь игра. Сорвался на шариках — не сорвался на стике. Попробуй ещё раз 💪')+'</div>'+
   '<div class="grid2" style="margin-top:14px"><button onclick="closeModal();tab=\'sos\';render()">Ещё 5 минут в SOS</button>'+
   '<button class="ghost" onclick="closeModal();tab=\'game\';render()">Играть ещё</button></div></div>';
  m.classList.add('on');}
