@@ -148,7 +148,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20261001192525';
+const APP_ID='20261002065413';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -323,7 +323,10 @@ function showPenalty(p,L){const m=document.getElementById('modal');
  '<button class="warn wide" style="margin-top:14px" onclick="closeModal()">Принял, отработаю 💪</button></div>';
  m.classList.add('on');}
 function pickTrigger(el,pid){const p=state.penalties.find(x=>x.id===pid);const t=el.textContent;
- state.slips.unshift({t:Date.now(),trigger:t});if(p){p.trigger=t;}el.classList.add('on');save();toast('Записал триггер: '+t);}
+ if(p&&p.trigger===t){state.slips=state.slips.filter(s=>s._pid!==pid);p.trigger=null;el.classList.remove('on');save();toast('Триггер отменён');return;}
+ var box=el.parentNode;if(box)box.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+ if(p&&p.trigger){state.slips=state.slips.filter(s=>s._pid!==pid);}
+ state.slips.unshift({t:Date.now(),trigger:t,_pid:pid});if(p){p.trigger=t;}el.classList.add('on');save();toast('Записал триггер: '+t);}
 function closeModal(){document.getElementById('modal').classList.remove('on');}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('on'),2200);}
 function notifyServer(){if(!API_BASE)return;const L=currentLimit(),s=smokedOn(today());
