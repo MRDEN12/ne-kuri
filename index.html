@@ -148,7 +148,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20261002065413';
+const APP_ID='20261002071257';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -318,15 +318,18 @@ function showPenalty(p,L){const m=document.getElementById('modal');
  m.innerHTML='<div class="sheet"><div style="font-size:38px">⛔</div><h2>Рано!</h2>'+
  '<div class="muted">'+(L===0?'Ты на нуле — стик это срыв.':'Выкурил раньше паузы ('+cooldownMin()+' мин).')+'</div>'+
  '<div class="fine">Штраф: '+p.name+(p.amt?(' ×'+p.amt+' '+(p.unit||'')):'')+'</div>'+
- '<div style="text-align:left;margin-top:14px"><div class="muted">Что было перед этим?</div><div class="chips">'+
- TRIGGERS.map(t=>'<span class="chip" onclick="pickTrigger(this,\''+p.id+'\')">'+t+'</span>').join('')+'</div></div>'+
+ '<div style="text-align:left;margin-top:14px"><div class="muted">Что было перед этим? <span style="opacity:.7">(можно несколько, тапни ещё раз чтобы снять)</span></div><div class="chips">'+
+ TRIGGERS.map(t=>'<span class="chip'+(((p.triggers||[]).indexOf(t)>=0)?' on':'')+'" onclick="pickTrigger(this,\''+p.id+'\')">'+t+'</span>').join('')+'</div></div>'+
  '<button class="warn wide" style="margin-top:14px" onclick="closeModal()">Принял, отработаю 💪</button></div>';
  m.classList.add('on');}
-function pickTrigger(el,pid){const p=state.penalties.find(x=>x.id===pid);const t=el.textContent;
- if(p&&p.trigger===t){state.slips=state.slips.filter(s=>s._pid!==pid);p.trigger=null;el.classList.remove('on');save();toast('Триггер отменён');return;}
- var box=el.parentNode;if(box)box.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
- if(p&&p.trigger){state.slips=state.slips.filter(s=>s._pid!==pid);}
- state.slips.unshift({t:Date.now(),trigger:t,_pid:pid});if(p){p.trigger=t;}el.classList.add('on');save();toast('Записал триггер: '+t);}
+function pickTrigger(el,pid){const p=state.penalties.find(x=>x.id===pid);const t=el.textContent.trim();
+ let arr=p&&Array.isArray(p.triggers)?p.triggers.slice():(p&&p.trigger?p.trigger.split(', ').filter(Boolean):[]);
+ const i=arr.indexOf(t);if(i>=0)arr.splice(i,1);else arr.push(t);
+ if(p){p.triggers=arr;p.trigger=arr.join(', ');}
+ state.slips=(state.slips||[]).filter(s=>s.pid!==pid);
+ arr.slice().reverse().forEach(x=>state.slips.unshift({t:Date.now(),pid:pid,trigger:x}));
+ el.classList.toggle('on');try{haptic('light');}catch(e){}
+ save();toast(arr.length?('Отмечено: '+arr.join(', ')):'Отметка снята');}
 function closeModal(){document.getElementById('modal').classList.remove('on');}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('on'),2200);}
 function notifyServer(){if(!API_BASE)return;const L=currentLimit(),s=smokedOn(today());
