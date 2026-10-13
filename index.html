@@ -148,7 +148,7 @@ window.addEventListener('unhandledrejection',function(e){window.__err('Promise: 
 </script>
 <script>
 const APP_VER='v3 · 25.09.2026';
-const APP_ID='20261008232533';
+const APP_ID='20261013212319';
 const TG=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();TG.setHeaderColor&&TG.setHeaderColor('#0e1013');TG.enableClosingConfirmation&&TG.enableClosingConfirmation();}catch(e){}}
 const haptic=t=>{try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light');}catch(e){}};
@@ -339,6 +339,9 @@ function notifyServer(){if(!API_BASE)return;const L=currentLimit(),s=smokedOn(to
 function reportDiag(){if(!API_BASE)return;try{fetch(API_BASE+'/diag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
  initData:(TG&&TG.initData)||'',src:LOAD_SRC,size:JSON.stringify(state).length,total:total(),today:smokedOn(today()),
  plan:diffDays(state.startDate,today())+1,cs:!!(TG&&TG.CloudStorage)})}).catch(()=>{});}catch(e){}}
+function claimGift(){if(!API_BASE)return;try{fetch(API_BASE+'/gift',{method:'POST',headers:{'Content-Type':'application/json'},
+ body:JSON.stringify({initData:(TG&&TG.initData)||''})}).then(r=>r.json()).then(d=>{const g=parseInt((d&&d.gift)||0,10);
+ if(g>0){state.garden.leaves+=g;try{haptic('heavy');}catch(e){}save();render();toast('🎁 +'+g+' листиков в сад!');}}).catch(()=>{});}catch(e){}}
 
 /* ---------- чат с Оскаром ---------- */
 function chatContext(){return 'день плана '+(diffDays(state.startDate,today())+1)+', лимит сегодня '+currentLimit()+
@@ -830,7 +833,7 @@ function updCd(){const el=document.getElementById('cdtime');if(!el)return;
 
 window.tab=tab;
 try{render();}catch(e){window.__err(e.message);}
-load(()=>{try{accrue();if(state.settings.theme==='auto'&&TG&&TG.colorScheme)state.settings.theme=TG.colorScheme==='light'?'light':'dark';if(!SOUNDS.some(x=>x[0]===state.settings.sound))state.settings.sound='none';applyTheme();render();save();}catch(e){window.__err(e.message);}try{setTimeout(reportDiag,3000);}catch(e){}});
+load(()=>{try{accrue();if(state.settings.theme==='auto'&&TG&&TG.colorScheme)state.settings.theme=TG.colorScheme==='light'?'light':'dark';if(!SOUNDS.some(x=>x[0]===state.settings.sound))state.settings.sound='none';applyTheme();render();save();}catch(e){window.__err(e.message);}try{setTimeout(reportDiag,3000);}catch(e){}try{setTimeout(claimGift,1500);}catch(e){}});
 (function(){try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{const id=d&&d.id;if(!id||id===APP_ID)return;
  if(location.search.indexOf(id)>=0)return;if(sessionStorage.getItem('nk_upd')===id)return;
  sessionStorage.setItem('nk_upd',id);location.replace(location.pathname+'?id='+encodeURIComponent(id)+location.hash);}).catch(()=>{});}catch(e){}})();
